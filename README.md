@@ -1,8 +1,8 @@
-# **Scratch CAS**
+# **sym Scratch**
 
-用 GoBoScript 编写、编译到原版 Scratch 3.0 的符号计算终端。无扩展依赖，可在 Scratch / TurboWarp 中运行。
+用 GoboScript 编写、编译到原版 Scratch 3.0 的符号计算。无扩展依赖，可在 Scratch / TurboWarp 中运行。
 
-支持有理数、任意精度整数、BigFloat 科学计数法、多项式、根式、三角、微积分、极限、向量/矩阵/嵌套列表和变量定义。
+支持有理数、任意精度整数、BigFloat 科学计数法、多项式、根式、三角、微~~积~~分、极限、向量/矩阵/嵌套列表和变量定义。
 
 **欢迎反馈 bug。**
 
@@ -37,8 +37,6 @@ approx(2^(2^100))
 - 幂与根式：同底合并、指数律、`abs`/`unitV` 向量处理
 - 极限：有限点洛必达/级数；无穷远用 Gruntz 风格 leading-term 比较
 - BigFloat：尾数 + 十进制指数两个 double；超出 double 的幂回退到 `log10` 路径
-- 终端：Source Code Pro 字形、按行缓冲、像素滚动
-
 ***
 
 **语法**
@@ -114,7 +112,7 @@ approx([sqrt(2),pi])           -> [1.4142135624, 3.1415926536]
 
 **构建**
 
-需要 GoBoScript 编译器：
+需要 GoboScript 编译器：
 
 ```bash
 # 在仓库根目录
@@ -125,17 +123,14 @@ GOBOSCRIPT=/path/to/goboscript ./tests/build.sh
 
 **限制**
 
-- 旧版冒号命令已移除，只支持函数式写法
-- 二维分数/上标排版暂未启用，结果为单行终端文本
 - `det` 目前支持 1×1 / 2×2 / 3×3
 - 完整 Gruntz mrv（exp/log 混合极限）尚未实现
 - 容器暂不支持所有多元函数；当前重点是映射、线性代数基础与嵌套列表
 
 **借物表**
 
-- [GoBoScript](https://github.com/aspizu/goboscript)
+- [GoboScript](https://github.com/aspizu/goboscript)
 - Source Code Pro，Adobe，SIL Open Font License 1.1
-- [symSC / Beta-Math](https://github.com/SQY419/Beta-Math/tree/main/symSC) 的 README 风格参考
 - TurboWarp / Scratch 3.0 runtime
 
 **快照**
