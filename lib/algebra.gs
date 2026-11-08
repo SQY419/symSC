@@ -1,6 +1,8 @@
 var sp_cn = 1;
 var sp_cd = 1;
 var sp_base = 0;
+var sp_big = false;
+var sp_bn = "0";
 
 proc push_m id {
     msp++;
@@ -105,6 +107,21 @@ proc pow_node base, e {
     } elif abs($e) > MAX_EXP {
         set_err "指数过大";
         pow_node = 0;
+    } elif nd_kind[$base] == K.Big {
+        if $e >= 1 and $e <= MAX_EXP {
+            bi_pow_str nd_txt[$base], $e;
+            mk_big bi_pow_str;
+            mk_pow_raw = mk_big;
+        } elif $e == 0 {
+            mk_num 1, 1;
+            mk_pow_raw = mk_num;
+        } elif $e == -1 {
+            mk_big ("1/" & nd_txt[$base]);
+            mk_pow_raw = mk_big;
+        } else {
+            pow_node $base, $e;
+            mk_pow_raw = pow_node;
+        }
     } elif nd_kind[$base] == K.Num {
         if nd_num[$base] == 0 and $e < 0 {
             mk_undef;
@@ -411,6 +428,7 @@ proc mk_mul a, b {
         fac_count = 0;
         local cn = 1;
         local cd = 1;
+        local bigfac = "";
         delete mstk;
         msp = 0;
         push_m $a;
@@ -430,6 +448,9 @@ proc mk_mul a, b {
                     cn = rn;
                     cd = rd;
                 }
+            } elif k == K.Big {
+                if bigfac == "" { bigfac = nd_txt[x]; }
+                else { bi_mul_str bigfac, nd_txt[x]; bigfac = bi_mul_str; }
             } elif k == K.Pow {
                 local bb = nd_a[x];
                 local ee = nd_num[x];
@@ -452,6 +473,10 @@ proc mk_mul a, b {
             } else {
                 add_factor x, 1;
             }
+        }
+        if bigfac != "" and bigfac != "1" {
+            mk_big bigfac;
+            add_factor mk_big, 1;
         }
         build_product cn, cd;
         mk_mul = build_product;
@@ -545,12 +570,12 @@ proc surd_power base, e {
     surd_big = false;
     if nd_kind[$base] != K.Add or $e < 32 or $e > 50 { surd_power = 0; }
     else {
-        surd_ok = true;
-        surd_a = 0;
-        surd_b = 0;
-        surd_d = 0;
-        # Flatten the two terms of a + b*sqrt(d).
+        local aa = 0;
+        local bb = 0;
+        local dd = 0;
+        local ok = true;
         delete surd_terms;
+        delete surd_stk;
         local sp = 0;
         sp++; add $base to surd_stk;
         until sp == 0 {
@@ -566,16 +591,50 @@ proc surd_power base, e {
             }
         }
         local i = 1;
-        until i > length(surd_terms) or surd_ok == false {
-            surd_add_term surd_terms[i], 1;
+        until i > length(surd_terms) or ok == false {
+            local term = surd_terms[i];
+            if nd_kind[term] == K.Num and nd_den[term] == 1 {
+                aa = aa + nd_num[term];
+            } else {
+                local coeff = 1;
+                local rad = 0;
+                local factors = 0;
+                local sp2 = 0;
+                delete surd_stk;
+                sp2++; add term to surd_stk;
+                until sp2 == 0 {
+                    local y = surd_stk[sp2];
+                    sp2--;
+                    if nd_kind[y] == K.Mul {
+                        sp2++;
+                        if sp2 > length(surd_stk) { add nd_b[y] to surd_stk; } else { surd_stk[sp2] = nd_b[y]; }
+                        sp2++;
+                        if sp2 > length(surd_stk) { add nd_a[y] to surd_stk; } else { surd_stk[sp2] = nd_a[y]; }
+                    } elif nd_kind[y] == K.Sqrt and nd_kind[nd_a[y]] == K.Num and nd_den[nd_a[y]] == 1 and factors == 0 {
+                        rad = nd_a[y];
+                        factors++;
+                    } elif nd_kind[y] == K.Num and nd_den[y] == 1 {
+                        coeff = coeff * nd_num[y];
+                    } else {
+                        ok = false;
+                        sp2 = 0;
+                    }
+                }
+                if factors != 1 or bb != 0 {
+                    ok = false;
+                } else {
+                    bb = coeff;
+                    dd = nd_num[rad];
+                }
+            }
             i++;
         }
-        if surd_ok == false or surd_b == 0 or surd_d <= 1 {
+        if ok == false or bb == 0 or dd <= 1 {
             surd_power = 0;
         } else {
-            local astr = "" & surd_a;
-            local bstr = "" & surd_b;
-            local dstr = "" & surd_d;
+            local astr = "" & aa;
+            local bstr = "" & bb;
+            local dstr = "" & dd;
             local an = "1";
             local bn = "0";
             local k = 0;
@@ -613,7 +672,7 @@ proc surd_power base, e {
                 if bn != "0" {
                     mk_big bn;
                     local bt = mk_big;
-                    mk_num surd_d, 1;
+                    mk_num dd, 1;
                     mk_func K.Sqrt, mk_num;
                     local sv = mk_func;
                     mk_mul bt, sv;
@@ -687,10 +746,8 @@ proc mk_pow_raw base, e {
         local btxt = nd_num[$base];
         local etxt = 0 - $e;
         bi_pow_str btxt, etxt;
-        mk_big bi_pow_str;
-        local bigpow = mk_big;
-        mk_pow bigpow, -1;
-        mk_pow_raw = mk_pow;
+        mk_big ("1/" & bi_pow_str);
+        mk_pow_raw = mk_big;
     } elif nd_kind[$base] == K.PowE {
         local inn = nd_a[$base];
         mk_num $e, 1;
@@ -834,10 +891,19 @@ proc split_term x {
         sp_cn = nd_num[$x];
         sp_cd = nd_den[$x];
         sp_base = 0;
+        sp_big = false;
+        sp_bn = "";
+    } elif nd_kind[$x] == K.Big {
+        sp_cn = 1;
+        sp_cd = 1;
+        sp_base = 0;
+        sp_big = true;
+        sp_bn = nd_txt[$x];
     } elif nd_kind[$x] == K.Mul {
         local cn = 1;
         local cd = 1;
         local base = 0;
+        local bn = "";
         delete sstk;
         ssp = 0;
         push_s $x;
@@ -855,6 +921,9 @@ proc split_term x {
                     cn = rn;
                     cd = rd;
                 }
+            } elif nd_kind[y] == K.Big {
+                if bn == "" { bn = nd_txt[y]; }
+                else { bi_mul_str bn, nd_txt[y]; bn = bi_mul_str; }
             } else {
                 if base == 0 {
                     base = y;
@@ -867,10 +936,19 @@ proc split_term x {
         sp_cn = cn;
         sp_cd = cd;
         sp_base = base;
+        if bn != "" {
+            sp_big = true;
+            sp_bn = bn;
+        } else {
+            sp_big = false;
+            sp_bn = "";
+        }
     } else {
         sp_cn = 1;
         sp_cd = 1;
         sp_base = $x;
+        sp_big = false;
+        sp_bn = "";
     }
 }
 
@@ -1213,6 +1291,11 @@ proc cont_mul a, b {
     }
 }
 
+list add_big;
+list add_bn;
+list comb_big;
+list comb_bn;
+
 proc mk_add a, b {
     if is_container($a) or is_container($b) {
         if is_container($a) and is_container($b) {
@@ -1262,6 +1345,8 @@ proc mk_add a, b {
         delete add_base;
         delete add_n;
         delete add_d;
+        delete add_big;
+        delete add_bn;
         add_count = 0;
         delete astk;
         asp = 0;
@@ -1282,6 +1367,8 @@ proc mk_add a, b {
                     add sp_base to add_base;
                     add sp_cn to add_n;
                     add sp_cd to add_d;
+                    add sp_big to add_big;
+                    add sp_bn to add_bn;
                 }
             }
         }
@@ -1289,6 +1376,8 @@ proc mk_add a, b {
             delete comb_base;
             delete comb_n;
             delete comb_d;
+            delete comb_big;
+            delete comb_bn;
             comb_count = 0;
             local i = 1;
             until i > add_count {
@@ -1306,14 +1395,35 @@ proc mk_add a, b {
                     }
                 }
                 if found > 0 {
-                    rat_add comb_n[found], comb_d[found], add_n[i], add_d[i];
-                    comb_n[found] = rn;
-                    comb_d[found] = rd;
+                    if add_big[i] or comb_big[found] {
+                        if add_d[i] == 1 and comb_d[found] == 1 {
+                            local ans = "";
+                            local bns = "";
+                            if comb_big[found] { ans = comb_bn[found]; } else { ans = "" & comb_n[found]; }
+                            if add_big[i] { bns = add_bn[i]; } else { bns = "" & add_n[i]; }
+                            bi_add_str ans, bns;
+                            comb_bn[found] = bi_add_str;
+                            comb_big[found] = true;
+                            comb_n[found] = 1;
+                            comb_d[found] = 1;
+                        } else {
+                            rat_add comb_n[found], comb_d[found], add_n[i], add_d[i];
+                            comb_n[found] = rn;
+                            comb_d[found] = rd;
+                            comb_big[found] = false;
+                        }
+                    } else {
+                        rat_add comb_n[found], comb_d[found], add_n[i], add_d[i];
+                        comb_n[found] = rn;
+                        comb_d[found] = rd;
+                    }
                 } else {
                     comb_count++;
                     add add_base[i] to comb_base;
                     add add_n[i] to comb_n;
                     add add_d[i] to comb_d;
+                    add add_big[i] to comb_big;
+                    add add_bn[i] to comb_bn;
                 }
                 i++;
             }
@@ -1322,9 +1432,19 @@ proc mk_add a, b {
                 delete sum_nodes;
                 local i = 1;
                 until i > comb_count {
-                    if comb_n[i] != 0 {
+                    if comb_big[i] or comb_n[i] != 0 {
                         local node = 0;
-                        if comb_base[i] == 0 {
+                        if comb_big[i] {
+                            if comb_base[i] == 0 {
+                                mk_big comb_bn[i];
+                                node = mk_big;
+                            } else {
+                                mk_big comb_bn[i];
+                                local c = mk_big;
+                                mk_mul c, comb_base[i];
+                                node = mk_mul;
+                            }
+                        } elif comb_base[i] == 0 {
                             mk_num comb_n[i], comb_d[i];
                             node = mk_num;
                         } elif comb_n[i] == 1 and comb_d[i] == 1 {

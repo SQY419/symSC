@@ -113,7 +113,7 @@ proc mk_num n, d {
 }
 
 proc mk_big text {
-    mk_big = new_node(K.Var, 0, 0, 0, 1, $text);
+    mk_big = new_node(K.Big, 0, 0, 0, 1, $text);
     if mk_big != 0 {
         nd_sig[mk_big] = "B" & nd_txt[mk_big];
         nd_deg[mk_big] = 0;
@@ -671,8 +671,13 @@ func int_text(id) {
 }
 
 func is_big(id) {
-    if $id == 0 or nd_kind[$id] != K.Var or length(nd_txt[$id]) == 0 { return false; }
+    if $id == 0 or (nd_kind[$id] != K.Var and nd_kind[$id] != K.Big) or length(nd_txt[$id]) == 0 { return false; }
     local c = nd_txt[$id][1];
+    local i = 1;
+    until i > length(nd_txt[$id]) {
+        if nd_txt[$id][i] == "/" { return false; }
+        i++;
+    }
     return is_digit_char(c) or (c == "-" and length(nd_txt[$id]) > 1 and is_digit_char(nd_txt[$id][2]));
 }
 
