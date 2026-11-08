@@ -1,0 +1,9 @@
+{
+  "name": "cas-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless regression runner for the Scratch CAS core",
+  "dependencies": {
+    "scratch-vm": "5.0.300"
+  }
+}

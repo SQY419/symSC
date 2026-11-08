@@ -1,0 +1,18 @@
+{
+  "font": "SourceCodePro.ttf",
+  "upem": 1000,
+  "advance_units": 600,
+  "font_px": 32.0,
+  "scale": 0.032,
+  "canvas_units": [
+    760.0,
+    1417.0
+  ],
+  "canvas_px": [
+    24.32,
+    45.344
+  ],
+  "baseline_from_center_px": 11.376,
+  "line_height_px": 45.344,
+  "margin_units": 80.0
+}

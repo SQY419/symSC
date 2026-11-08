@@ -1,0 +1,26 @@
+# Generated Scratch artifacts that are rebuilt by tests/build.sh
+/cas.sb3
+/tests/tests.sb3
+/tests/bench.sb3
+/tests/bench_project/
+/tests/node_modules/
+/tests/project/lib/
+/tests/project/blank.svg
+/tests/project/data/cases.gs
+
+# Separate/legacy subprojects and backups
+/printer-empty/
+/tty-backup/
+/tokenizer/
+/zm (2).sprite3
+/cas-clean.sb3
+
+# Debug/local probes
+/tests/debug_*.js
+/tests/tmp_probe.js
+/tests/probe_results.js
+*.html
+
+# OS/editor
+.DS_Store
+Thumbs.db
