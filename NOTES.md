@@ -40,7 +40,7 @@ ln(exp(x))                         ->  x
 exp(ln(x))                         ->  x
 abs(abs(x))                        ->  abs(x)
 subst(x^2, x=(a+1))                ->  (a + 1)^2
-eval-at(x^2 + 2*x + 1, x=3)        ->  16
+subst(x^2 + 2*x + 1, x=3)        ->  16
 ```
 嵌套调用：
 ```
