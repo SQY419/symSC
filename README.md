@@ -1,10 +1,11 @@
 # **sym Scratch**
 
-用 GoboScript 编写、编译到原版 Scratch 3.0 的符号计算。无扩展依赖，可在 Scratch / TurboWarp 中运行。
+用 GoboScript 编写的，可编译到原版 Scratch 3.0 的符号计算。
+无**第三方扩展**依赖，可在 Scratch / TurboWarp 中运行。
 
 支持有理数、任意精度整数、BigFloat 科学计数法、多项式、根式、三角、微~~积~~分、极限、向量/矩阵/嵌套列表和变量定义。
 
-**欢迎反馈 bug。**
+**欢迎反馈 bug**
 
 ***
 
@@ -84,7 +85,7 @@ x/y+z/y            -> (x + z)/y
 
 **算法**
 
-- 有理数：约分 + 安全整数运算；大整数系数使用十进制 BigInt，不再受 double 安全范围限制
+- 有理数：约分 + 安全整数运算；大整数系数使用十进制 BigInt
 - 高精度整数：十进制压位、平方-乘幂
 - 多项式 GCD：一元精确除法、二元 modular GCD、n 元 Kronecker/网格插值
 - 幂与根式：同底合并、指数律、`abs`/`unitV` 向量处理
@@ -211,7 +212,7 @@ approx([sqrt(2),pi])           -> [1.4142135624, 3.1415926536]
 
 `c` 清屏，`h` 显示帮助。终端文本可拖动滚动，最多保留 5000 行。
 
-例如 `help(simplify)` 会分别显示函数签名和说明；`x^(1/2)` 统一显示为 `sqrt(x)`。`help(function)` 查看单个函数的详细说明，例如 `help(simplify)`、`help(series)`；`help()` 查看总览。
+例如 `help(simplify)` 会分别显示函数签名和说明；`help(function)` 查看单个函数的详细说明，例如 `help(simplify)`、`help(series)`；`help()` 查看总览。
 
 **鲁棒性**
 
