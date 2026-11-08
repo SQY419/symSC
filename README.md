@@ -41,7 +41,7 @@ series(1/(e^(-x)+1), x=oo, 5)
 1/x+1/y
 > (x + y)/(x*y)
 
-limit(1/x, x, infinity)
+limit(1/x, x, oo)
 > 0
 
 approx(2^(2^100))
