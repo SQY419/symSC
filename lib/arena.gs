@@ -579,8 +579,13 @@ proc mk_func kind, ch {
         mk_func = sqrt_factor;
     } elif $kind == K.Sqrt and is_bigfrac($ch) {
         bigfrac_text $ch;
-        mk_big ("sqrt(" & bigfrac_text & ")");
-        mk_func = mk_big;
+        local stxt = "sqrt(" & bigfrac_text & ")";
+        local sid = new_node(K.Var, 0, 0, 0, 1, stxt);
+        if sid != 0 {
+            nd_sig[sid] = "V" & stxt;
+            nd_deg[sid] = 0;
+        }
+        mk_func = sid;
     } elif $kind == K.Sqrt and nd_kind[$ch] == K.Mul {
         sqrt_product $ch;
         mk_func = sqrt_product;

@@ -109,7 +109,7 @@ proc approx_rebuild n {
         approx_rebuild = mk_pow_expr;
     } elif k == K.Approx {
         local ch = ap_val[nd_a[$n]];
-        if nd_kind[ch] == K.Big and substr(nd_txt[ch], 1, 5) == "sqrt(" {
+        if (nd_kind[ch] == K.Big or nd_kind[ch] == K.Var) and substr(nd_txt[ch], 1, 5) == "sqrt(" {
             local st = substr(nd_txt[ch], 6, length(nd_txt[ch]) - 1);
             local sl = find_char(st, "/");
             local qv = 0;
