@@ -2,7 +2,9 @@
 
 用 [GoboScript](https://github.com/aspizu/goboscript) 编写的，可编译到原版 Scratch 3.0 的符号计算。
 无**第三方扩展**依赖，可在 Scratch / TurboWarp 中运行。
-以前的版本是 [symSc](https://github.com/SQY419/Beta-Math/tree/main/symSC)，有数学输出。本实现没有数学输出，只有线性输出。
+
+
+以前的版本是 [symSc](https://github.com/SQY419/Beta-Math/tree/main/symSC)，有数学输出。本实现没有数学输出，只有线性输出。旧版本不支持 Vector 等诸多特性。
 
 支持有理数、任意精度整数、BigFloat 科学计数法、多项式、根式、三角、微~~积~~分、极限、向量/矩阵/嵌套列表和变量定义。
 
