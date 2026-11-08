@@ -90,6 +90,8 @@ proc show_help {
 }
 
 proc do_simplify text {
+    simp_exact = false;
+    frac_combined = false;
     parse_text $text;
     if parse_ok == false {
         cas_result = "错误：" & err;
