@@ -26,7 +26,15 @@ const cases = [
   ['makelist(x^2,x,1,3)[2]', '4'],
   ['a=114514', 'a = 114514'],
   ['purge(a)', '114514'],
-  ['purge(a)', '']
+  ['purge(a)', ''],
+  ['f(x)=x^2+1', 'f(x) = x^2 + 1'],
+  ['f(2)', '5'],
+  ['f(y)', 'y^2 + 1'],
+  ['diff(f(x),x)', '2*x'],
+  ['g(x,y)=x+y', 'g(x,y) = x + y'],
+  ['g(2,3)', '5'],
+  ['f(x)=x^2+2', 'f(x) = x^2 + 2'],
+  ['f(2)', '6']
 ];
 vm.loadProject(fs.readFileSync(process.argv[2])).then(async () => {
   const rt = vm.runtime;

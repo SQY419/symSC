@@ -40,6 +40,9 @@ list nd_txt;
 list nd_sig;
 list nd_deg;
 list ct_elems;
+list fn_name;
+list fn_params;
+list fn_body;
 list def_name;
 list def_text;
 

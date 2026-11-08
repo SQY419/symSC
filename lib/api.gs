@@ -732,6 +732,8 @@ proc dispatch_function cmd {
         do_collect_args;
     } elif $cmd == "purge" {
         do_purge_args;
+    } elif fn_lookup($cmd) > 0 {
+        do_user_fn_args $cmd;
     } elif $cmd == "help" or $cmd == "帮助" {
         show_help;
     } else {
@@ -747,7 +749,7 @@ var fc_close = 0;
 var fc_name = 0;
 
 func is_cmd_name(name) {
-    return $name == "simplify" or $name == "expand" or $name == "diff" or $name == "subst" or $name == "eval" or $name == "gcd" or $name == "lcm" or $name == "series" or $name == "limit" or $name == "texpand" or $name == "tlinear" or $name == "tcollect" or $name == "sin2cos" or $name == "cos2sin" or $name == "halftan" or $name == "trigsin" or $name == "trigcos" or $name == "trigtan" or $name == "collect" or $name == "purge" or $name == "最大公因式" or $name == "最小公倍式" or $name == "help" or $name == "化简" or $name == "展开" or $name == "求导" or $name == "代入" or $name == "求值" or $name == "帮助";
+    return $name == "simplify" or $name == "expand" or $name == "diff" or $name == "subst" or $name == "eval" or $name == "gcd" or $name == "lcm" or $name == "series" or $name == "limit" or $name == "texpand" or $name == "tlinear" or $name == "tcollect" or $name == "sin2cos" or $name == "cos2sin" or $name == "halftan" or $name == "trigsin" or $name == "trigcos" or $name == "trigtan" or $name == "collect" or $name == "purge" or $name == "最大公因式" or $name == "最小公倍式" or $name == "help" or $name == "化简" or $name == "展开" or $name == "求导" or $name == "代入" or $name == "求值" or $name == "帮助" or fn_lookup($name) > 0;
 }
 
 func skip_spaces(s, i) {
@@ -823,7 +825,19 @@ func find_innermost_call(s) {
 
 proc nested_command_node name, argstr {
     split_args $argstr;
-    if $name == "simplify" or $name == "化简" {
+    if fn_lookup($name) > 0 {
+        fn_apply_text $name, $argstr;
+        if err == "" {
+            parse_text fn_call_text;
+            if parse_ok == false {
+                nested_command_node = 0;
+            } else {
+                rules_simplify parse_root;
+                if err == "" { nested_command_node = rules_simplify; }
+                else { nested_command_node = 0; }
+            }
+        } else { nested_command_node = 0; }
+    } elif $name == "simplify" or $name == "化简" {
         if arg_count != 1 {
             set_err "simplify 需要 1 个参数";
             nested_command_node = 0;
@@ -1100,16 +1114,26 @@ proc expand_nested_text s {
             local open = fc_open;
             local close = fc_close;
             local inner = substr(work, open + 1, close - 1);
-            nested_command_node name, inner;
-            local node = nested_command_node;
-            if err != "" or node == 0 {
-                all_done = true;
+            if fn_lookup(name) > 0 {
+                fn_apply_text name, inner;
+                if err == "" {
+                    work = substr(work, 1, st - 1) & fn_call_text & substr(work, close + 1, length(work));
+                    guard++;
+                } else {
+                    all_done = true;
+                }
             } else {
-                bind_count++;
-                local ph = "__c" & bind_count;
-                bind_add ph, node;
-                work = substr(work, 1, st - 1) & ph & substr(work, close + 1, length(work));
-                guard++;
+                nested_command_node name, inner;
+                local node = nested_command_node;
+                if err != "" or node == 0 {
+                    all_done = true;
+                } else {
+                    bind_count++;
+                    local ph = "__c" & bind_count;
+                    bind_add ph, node;
+                    work = substr(work, 1, st - 1) & ph & substr(work, close + 1, length(work));
+                    guard++;
+                }
             }
         }
     }
@@ -1125,6 +1149,153 @@ proc expand_nested_text s {
 
 func is_reserved_ident(n) {
     return $n == "sin" or $n == "cos" or $n == "tan" or $n == "exp" or $n == "ln" or $n == "log" or $n == "sqrt" or $n == "abs" or $n == "asin" or $n == "acos" or $n == "atan" or $n == "sgn" or $n == "makelist" or $n == "cross" or $n == "dot" or $n == "transpose" or $n == "det" or $n == "length" or $n == "unitv" or $n == "approx" or $n == "purge" or $n == "pi" or $n == "e" or $n == "oo" or $n == "inf" or $n == "undef" or $n == "help";
+}
+
+func fn_lookup(n) {
+    local i = 1;
+    until i > length(fn_name) {
+        if fn_name[i] == $n { return i; }
+        i++;
+    }
+    return 0;
+}
+
+proc fn_set n, params, body {
+    local i = 1;
+    until i > length(fn_name) or fn_name[i] == $n {
+        i++;
+    }
+    if i <= length(fn_name) {
+        fn_params[i] = $params;
+        fn_body[i] = $body;
+    } else {
+        add $n to fn_name;
+        add $params to fn_params;
+        add $body to fn_body;
+    }
+}
+
+proc fn_purge n {
+    local i = 1;
+    until i > length(fn_name) {
+        if fn_name[i] == $n {
+            delete fn_name[i];
+            delete fn_params[i];
+            delete fn_body[i];
+            i = length(fn_name) + 1;
+        } else { i++; }
+    }
+}
+
+var fn_def_name = "0";
+var fn_def_params = "0";
+var fn_def_ok = false;
+
+proc fn_parse_lhs lhs {
+    fn_def_ok = false;
+    local s = trim($lhs);
+    local po = find_char(s, "(");
+    if po > 0 {
+        local pc = find_close(s, po);
+        if pc == length(s) {
+            local nm = norm_ident(trim(substr(s, 1, po - 1)));
+            local ps = trim(substr(s, po + 1, pc - 1));
+            if is_simple_ident(nm) {
+                local good = true;
+                local ptxt = "";
+                if ps != "" {
+                    split_args ps;
+                    local i = 1;
+                    until i > arg_count or good == false {
+                        if is_simple_ident(trim(args[i])) == false {
+                            good = false;
+                        } else {
+                            if ptxt != "" { ptxt &= ","; }
+                            ptxt &= norm_ident(trim(args[i]));
+                        }
+                        i++;
+                    }
+                }
+                if good {
+                    fn_def_name = nm;
+                    fn_def_params = ptxt;
+                    fn_def_ok = true;
+                }
+            }
+        }
+    }
+}
+
+var fn_call_text = "0";
+var fn_depth = 0;
+list fn_pnames;
+list fn_avals;
+list fn_joined;
+
+proc fn_apply_text name, argstr {
+    fn_call_text = "";
+    local id = fn_lookup($name);
+    if id == 0 {
+        set_err "未知函数 " & $name;
+    } elif fn_depth >= 64 {
+        set_err "函数递归过深";
+    } else {
+        delete fn_pnames;
+        delete fn_avals;
+        delete fn_joined;
+        local params = fn_params[id];
+        if params != "" {
+            split_args params;
+            local i = 1;
+            until i > arg_count {
+                add args[i] to fn_pnames;
+                i++;
+            }
+        }
+        if $argstr == "" { arg_count = 0; }
+        else { split_args $argstr; }
+        local nargs = arg_count;
+        local i = 1;
+        until i > nargs {
+            add args[i] to fn_avals;
+            i++;
+        }
+        if nargs != length(fn_pnames) {
+            set_err "函数参数个数不匹配";
+        } else {
+            local body = fn_body[id];
+            i = 1;
+            until i > nargs or err != "" {
+                local val = fn_avals[i];
+                if val == "" { val = "0"; }
+                body = replace_ident(body, fn_pnames[i], "(" & val & ")");
+                i++;
+            }
+            if err == "" {
+                body = apply_defs(body);
+                fn_call_text = body;
+            }
+        }
+    }
+}
+
+proc fn_apply_args name {
+    local atxt = "";
+    local i = 1;
+    until i > arg_count {
+        if atxt != "" { atxt &= ","; }
+        atxt &= args[i];
+        i++;
+    }
+    fn_apply_text $name, atxt;
+}
+
+proc do_user_fn_args cmd {
+    fn_apply_args $cmd;
+    if err == "" {
+        expand_nested_text fn_call_text;
+        if err == "" { do_simplify expand_nested_text; }
+    }
 }
 
 func def_lookup(n) {
@@ -1153,6 +1324,7 @@ var purged_value = "0";
 var purged_found = false;
 
 proc def_purge n {
+    fn_purge $n;
     purged_value = "0";
     purged_found = false;
     local i = 1;
@@ -1201,7 +1373,9 @@ func apply_defs(s) {
     }
     local i = 1;
     until i > length(def_name) {
-        out = replace_ident(out, def_name[i], "(" & def_text[i] & ")");
+        if fn_lookup(def_name[i]) == 0 {
+            out = replace_ident(out, def_name[i], "(" & def_text[i] & ")");
+        }
         i++;
     }
     return out;
@@ -1248,14 +1422,33 @@ nowarp proc run_command s {
     local assign_ok = false;
     local lhs = "";
     local rhs = "";
+    local fn_ok = false;
     if assign_at > 0 {
         lhs = trim(substr(input, 1, assign_at - 1));
         rhs = trim(substr(input, assign_at + 1, length(input)));
         if is_simple_ident(lhs) and rhs != "" {
             assign_ok = true;
         }
+        if rhs != "" {
+            fn_parse_lhs lhs;
+            if fn_def_ok {
+                parse_text rhs;
+                if parse_ok == false {
+                    cas_result = "错误：" & err;
+                    fn_ok = true;
+                } else {
+                    pr_expr parse_root;
+                    local fb = pr_out;
+                    fn_set fn_def_name, fn_def_params, fb;
+                    cas_result = fn_def_name & "(" & fn_def_params & ") = " & fb;
+                    fn_ok = true;
+                }
+            }
+        }
     }
-    if assign_ok {
+    if fn_ok {
+        # function definition handled
+    } elif assign_ok {
         local rexp = apply_defs(rhs);
         parse_text rexp;
         if parse_ok == false {
