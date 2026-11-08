@@ -384,3 +384,6 @@ tan(pi/10)
 sin(pi/12)
 cos(pi/12)
 tan(pi/12)
+(1+sqrt(2))^50
+(1+sqrt(2))^10
+(1+sqrt(2))^3

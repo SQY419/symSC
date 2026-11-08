@@ -92,6 +92,7 @@ proc show_help {
 proc do_simplify text {
     simp_exact = false;
     frac_combined = false;
+    surd_big = false;
     parse_text $text;
     if parse_ok == false {
         cas_result = "错误：" & err;
@@ -122,7 +123,7 @@ proc do_simplify text {
                 cas_result = "错误：" & err;
             } else {
                 local cur = rules_simplify;
-                if simp_exact == false and frac_combined == false {
+                if simp_exact == false and frac_combined == false and surd_big == false {
                 local rit = 0;
                 local rch = true;
                 until rit >= 6 or rch == false or err != "" {

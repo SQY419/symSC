@@ -487,7 +487,158 @@ proc mk_neg x {
     }
 }
 
+var surd_big = false;
+var surd_ok = false;
+var surd_a = 0;
+var surd_b = 0;
+var surd_d = 0;
+list surd_terms;
+list surd_stk;
+
+proc surd_add_term term, sign {
+    if nd_kind[$term] == K.Num and nd_den[$term] == 1 {
+        surd_a = surd_a + $sign * nd_num[$term];
+    } else {
+        local factors = 0;
+        local coeff = $sign;
+        local rad = 0;
+        local sp = 0;
+        delete surd_stk;
+        sp++; add $term to surd_stk;
+        until sp == 0 {
+            local x = surd_stk[sp];
+            sp--;
+            if nd_kind[x] == K.Mul {
+                sp++;
+                if sp > length(surd_stk) { add nd_b[x] to surd_stk; } else { surd_stk[sp] = nd_b[x]; }
+                sp++;
+                if sp > length(surd_stk) { add nd_a[x] to surd_stk; } else { surd_stk[sp] = nd_a[x]; }
+            } elif nd_kind[x] == K.Sqrt {
+                if factors > 0 or nd_kind[nd_a[x]] != K.Num or nd_den[nd_a[x]] != 1 {
+                    surd_ok = false;
+                    sp = 0;
+                } else {
+                    rad = nd_a[x];
+                    factors++;
+                }
+            } elif nd_kind[x] == K.Num and nd_den[x] == 1 {
+                coeff = coeff * nd_num[x];
+            } else {
+                surd_ok = false;
+                sp = 0;
+            }
+        }
+        if factors != 1 or surd_ok == false {
+            surd_ok = false;
+        } else {
+            if surd_b != 0 { surd_ok = false; }
+            else {
+                surd_b = coeff;
+                surd_d = nd_num[rad];
+            }
+        }
+    }
+}
+
+proc surd_power base, e {
+    surd_power = 0;
+    surd_big = false;
+    if nd_kind[$base] != K.Add or $e < 32 or $e > 50 { surd_power = 0; }
+    else {
+        surd_ok = true;
+        surd_a = 0;
+        surd_b = 0;
+        surd_d = 0;
+        # Flatten the two terms of a + b*sqrt(d).
+        delete surd_terms;
+        local sp = 0;
+        sp++; add $base to surd_stk;
+        until sp == 0 {
+            local x = surd_stk[sp];
+            sp--;
+            if nd_kind[x] == K.Add {
+                sp++;
+                if sp > length(surd_stk) { add nd_b[x] to surd_stk; } else { surd_stk[sp] = nd_b[x]; }
+                sp++;
+                if sp > length(surd_stk) { add nd_a[x] to surd_stk; } else { surd_stk[sp] = nd_a[x]; }
+            } else {
+                add x to surd_terms;
+            }
+        }
+        local i = 1;
+        until i > length(surd_terms) or surd_ok == false {
+            surd_add_term surd_terms[i], 1;
+            i++;
+        }
+        if surd_ok == false or surd_b == 0 or surd_d <= 1 {
+            surd_power = 0;
+        } else {
+            local astr = "" & surd_a;
+            local bstr = "" & surd_b;
+            local dstr = "" & surd_d;
+            local an = "1";
+            local bn = "0";
+            local k = 0;
+            until k >= $e or err != "" {
+                bi_mul_str astr, an;
+                local t1 = bi_mul_str;
+                bi_mul_str dstr, bstr;
+                local db = bi_mul_str;
+                bi_mul_str db, bn;
+                local t2 = bi_mul_str;
+                bi_add_str t1, t2;
+                local na = bi_add_str;
+                bi_mul_str astr, bn;
+                local t3 = bi_mul_str;
+                bi_mul_str bstr, an;
+                local t4 = bi_mul_str;
+                bi_add_str t3, t4;
+                local nb = bi_add_str;
+                an = na;
+                bn = nb;
+                k++;
+            }
+            if err != "" {
+                surd_power = 0;
+            } elif an == "0" and bn == "0" {
+                mk_num 0, 1;
+                surd_power = mk_num;
+                surd_big = true;
+            } else {
+                local result = 0;
+                if an != "0" {
+                    mk_big an;
+                    result = mk_big;
+                }
+                if bn != "0" {
+                    mk_big bn;
+                    local bt = mk_big;
+                    mk_num surd_d, 1;
+                    mk_func K.Sqrt, mk_num;
+                    local sv = mk_func;
+                    mk_mul bt, sv;
+                    local term = mk_mul;
+                    if result == 0 { result = term; }
+                    else { mk_add result, term; result = mk_add; }
+                }
+                surd_power = result;
+                surd_big = true;
+            }
+        }
+    }
+}
+
 proc mk_pow base, e {
+    surd_power $base, $e;
+    if surd_power != 0 {
+        mk_pow = surd_power;
+    } else {
+        mk_pow_raw $base, $e;
+        mk_pow = mk_pow_raw;
+    }
+}
+
+proc mk_pow_raw base, e {
     if is_container($base) {
         ctb_begin nd_kind[$base];
         until ctb_idx[ctb_depth] > nd_den[$base] {
@@ -496,40 +647,40 @@ proc mk_pow base, e {
             ctb_idx[ctb_depth]++;
         }
         ctb_end;
-        mk_pow = ctb_out;
+        mk_pow_raw = ctb_out;
     } elif nd_kind[$base] == K.Inf {
-        if $e > 0 { mk_pow = $base; }
-        elif $e == 0 { mk_undef; mk_pow = mk_undef; }
-        else { mk_num 0, 1; mk_pow = mk_num; }
+        if $e > 0 { mk_pow_raw = $base; }
+        elif $e == 0 { mk_undef; mk_pow_raw = mk_undef; }
+        else { mk_num 0, 1; mk_pow_raw = mk_num; }
     } elif nd_kind[$base] == K.UN {
         mk_undef;
-        mk_pow = mk_undef;
+        mk_pow_raw = mk_undef;
     } elif $base == 0 {
         if $e > 0 {
             mk_num 0, 1;
-            mk_pow = mk_num;
+            mk_pow_raw = mk_num;
         } else {
             mk_undef;
-            mk_pow = mk_undef;
+            mk_pow_raw = mk_undef;
         }
     } elif err != "" {
-        mk_pow = 0;
+        mk_pow_raw = 0;
     } elif $e == 0 {
         if is_zero($base) {
             mk_undef;
-            mk_pow = mk_undef;
+            mk_pow_raw = mk_undef;
         } else {
             mk_num 1, 1;
-            mk_pow = mk_num;
+            mk_pow_raw = mk_num;
         }
     } elif $e == 1 {
-        mk_pow = $base;
+        mk_pow_raw = $base;
     } elif nd_kind[$base] == K.Num and nd_den[$base] == 1 and $e >= 0 and abs(nd_num[$base]) > 1 and ($e > 15 or abs($e) > MAX_EXP) {
         local btxt = nd_num[$base];
         local etxt = $e;
         bi_pow_str btxt, etxt;
         mk_big bi_pow_str;
-        mk_pow = mk_big;
+        mk_pow_raw = mk_big;
     } elif nd_kind[$base] == K.Num and nd_den[$base] == 1 and $e < 0 and abs($e) > 15 and abs(nd_num[$base]) > 1 {
         # 2^-200 -> 1/2^200.  The big integer module computes the positive
         # power exactly; Pow(big, -1) keeps the reciprocal exact.
@@ -539,7 +690,7 @@ proc mk_pow base, e {
         mk_big bi_pow_str;
         local bigpow = mk_big;
         mk_pow bigpow, -1;
-        mk_pow = mk_pow;
+        mk_pow_raw = mk_pow;
     } elif nd_kind[$base] == K.PowE {
         local inn = nd_a[$base];
         mk_num $e, 1;
@@ -547,44 +698,44 @@ proc mk_pow base, e {
         mk_mul nd_b[$base], en;
         local ne = mk_mul;
         mk_pow_expr inn, ne;
-        mk_pow = mk_pow_expr;
+        mk_pow_raw = mk_pow_expr;
     } elif nd_kind[$base] == K.Sqrt {
         local u = nd_a[$base];
         if $e % 2 == 0 {
             mk_pow u, $e / 2;
-            mk_pow = mk_pow;
+            mk_pow_raw = mk_pow;
         } elif $e > 1 {
             mk_pow u, ($e - 1) / 2;
             local p = mk_pow;
             mk_mul p, $base;
-            mk_pow = mk_mul;
+            mk_pow_raw = mk_mul;
         } else {
             # sqrt(u)^1 or sqrt(u)^-odd: keep the radical and its exponent.
             pow_node $base, $e;
-            mk_pow = pow_node;
+            mk_pow_raw = pow_node;
         }
     } elif abs($e) > MAX_EXP {
         set_err "指数过大";
-        mk_pow = 0;
+        mk_pow_raw = 0;
     } elif nd_kind[$base] == K.Num {
         if nd_num[$base] == 0 and $e < 0 {
             mk_undef;
-            mk_pow = mk_undef;
+            mk_pow_raw = mk_undef;
         } else {
         rat_pow nd_num[$base], nd_den[$base], $e;
         if rok == false {
-            mk_pow = 0;
+            mk_pow_raw = 0;
         } else {
             mk_num rn, rd;
-            mk_pow = mk_num;
+            mk_pow_raw = mk_num;
         }
         }
     } elif nd_kind[$base] == K.Float {
         local fv = float_pow_value(nd_num[$base], $e);
         if err == "" {
-            mk_pow = new_float(fv);
+            mk_pow_raw = new_float(fv);
         } else {
-            mk_pow = 0;
+            mk_pow_raw = 0;
         }
     } else {
         local b = $base;
@@ -601,26 +752,26 @@ proc mk_pow base, e {
             }
         }
         if b == 0 {
-            mk_pow = 0;
+            mk_pow_raw = 0;
         } elif ee == 0 {
             mk_num 1, 1;
-            mk_pow = mk_num;
+            mk_pow_raw = mk_num;
         } elif ee == 1 {
-            mk_pow = b;
+            mk_pow_raw = b;
         } elif nd_kind[b] == K.Num {
             rat_pow nd_num[b], nd_den[b], ee;
             if rok == false {
-                mk_pow = 0;
+                mk_pow_raw = 0;
             } else {
                 mk_num rn, rd;
-                mk_pow = mk_num;
+                mk_pow_raw = mk_num;
             }
         } elif nd_kind[b] == K.Float {
             local fv = float_pow_value(nd_num[b], ee);
             if err == "" {
-                mk_pow = new_float(fv);
+                mk_pow_raw = new_float(fv);
             } else {
-                mk_pow = 0;
+                mk_pow_raw = 0;
             }
         } elif nd_kind[b] == K.Mul {
             delete fac_base;
@@ -666,10 +817,10 @@ proc mk_pow base, e {
                 }
             }
             build_product cn, cd;
-            mk_pow = build_product;
+            mk_pow_raw = build_product;
         } else {
             pow_node b, ee;
-            mk_pow = pow_node;
+            mk_pow_raw = pow_node;
         }
     }
 }
