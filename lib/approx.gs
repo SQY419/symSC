@@ -109,15 +109,16 @@ proc approx_rebuild n {
         approx_rebuild = mk_pow_expr;
     } elif k == K.Approx {
         local ch = ap_val[nd_a[$n]];
-        if nd_kind[ch] == K.Sqrt and nd_kind[nd_a[ch]] == K.Var and find_char(nd_txt[nd_a[ch]], "/") > 0 {
-            local st = nd_txt[nd_a[ch]];
-            local sl = find_char(st, "/");
-            local nn = substr(st, 1, sl - 1);
-            local dd = substr(st, sl + 1, length(st));
-            local fv = 0;
-            if dd + 0 != 0 { fv = (nn + 0) / (dd + 0); }
-            local qv = new_float(sqrt(fv));
-            approx_rebuild = qv;
+        if nd_kind[ch] == K.Var and substr(nd_txt[ch], 1, 5) == "sqrt(" and find_char(nd_txt[ch], "/") > 0 {
+            local st = nd_txt[ch];
+            local sp1 = find_char(st, "(");
+            local sp2 = find_char(st, ")");
+            local sn = substr(st, sp1 + 1, sp2 - 1);
+            local sd = substr(st, sp2 + 2, length(st));
+            local qv = 0;
+            if sd + 0 != 0 { qv = sqrt(sn + 0) / (sd + 0); }
+            local qf = new_float(qv);
+            approx_rebuild = qf;
         } elif nd_kind[ch] == K.Sqrt and is_bigfrac(nd_a[ch]) {
             bigfrac_double nd_a[ch];
             local fv = bigfrac_double;

@@ -243,6 +243,12 @@ proc apply_bin op {
                 mk_pow_expr a, b;
                 push_out mk_pow_expr;
             }
+        } elif $op == "<" or $op == ">" or $op == "==" {
+            local oc = 0;
+            if $op == ">" { oc = 1; }
+            elif $op == "==" { oc = 2; }
+            mk_cmp a, b, oc;
+            push_out mk_cmp;
         } else {
             set_err "未知运算符 " & $op;
         }
@@ -547,6 +553,8 @@ proc parse_tokens {
                     prec = 3;
                 } elif op == "^" {
                     prec = 5;
+                } elif op == "<" or op == ">" or op == "==" {
+                    prec = 1;
                 }
                 local popping = true;
                 until os_count == 0 or popping == false {

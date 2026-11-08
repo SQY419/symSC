@@ -178,6 +178,17 @@ proc lex s {
         } elif c == "+" or c == "-" or c == "*" or c == "/" or c == "^" {
             add_token T.Op, c, i;
             i++;
+        } elif c == "<" or c == ">" {
+            add_token T.Op, c, i;
+            i++;
+        } elif c == "=" {
+            if i < length($s) and $s[i + 1] == "=" {
+                add_token T.Op, "==", i;
+                i += 2;
+            } else {
+                add_token T.Op, "=", i;
+                i++;
+            }
         } elif c == "(" {
             add_token T.LP, c, i;
             i++;

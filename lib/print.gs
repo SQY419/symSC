@@ -52,6 +52,8 @@ func pr_node_prec(id) {
         return 2;
     } elif nd_kind[$id] == K.Pow or nd_kind[$id] == K.PowE {
         return 3;
+    } elif nd_kind[$id] == K.Cmp {
+        return 1;
     } elif nd_kind[$id] == K.UN or nd_kind[$id] == K.Inf or nd_kind[$id] == K.Unknown {
         return 4;
     }
@@ -214,6 +216,14 @@ proc pr_handle id {
         pr_emit "pi";
     } elif nd_kind[$id] == K.E {
         pr_emit "e";
+    } elif nd_kind[$id] == K.Bool {
+        pr_emit nd_txt[$id];
+    } elif nd_kind[$id] == K.Cmp {
+        pr_node nd_a[$id], 2;
+        if nd_num[$id] == 0 { pr_text " < "; }
+        elif nd_num[$id] == 1 { pr_text " > "; }
+        else { pr_text " == "; }
+        pr_node nd_b[$id], 2;
     } elif nd_kind[$id] == K.UN {
         pr_emit "undef";
     } elif nd_kind[$id] == K.Big {

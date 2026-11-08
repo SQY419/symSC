@@ -1428,7 +1428,7 @@ nowarp proc run_command s {
     if assign_at > 0 {
         lhs = trim(substr(input, 1, assign_at - 1));
         rhs = trim(substr(input, assign_at + 1, length(input)));
-        if is_simple_ident(lhs) and rhs != "" {
+        if is_simple_ident(lhs) and rhs != "" and substr(rhs, 1, 1) != "=" {
             assign_ok = true;
         }
         if rhs != "" {

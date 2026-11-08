@@ -120,6 +120,56 @@ proc mk_big text {
     }
 }
 
+proc mk_bool v {
+    local btxt = "False";
+    if $v != 0 { btxt = "True"; }
+    local id = new_node(K.Var, 0, 0, 0, 1, btxt);
+    if id != 0 {
+        nd_sig[id] = "V" & btxt;
+        nd_deg[id] = 0;
+    }
+    mk_bool = id;
+}
+
+proc mk_cmp a, b, op {
+    local va = 0;
+    local vb = 0;
+    local ok = true;
+    if $op == 2 and nd_sig[$a] == nd_sig[$b] {
+        mk_bool 1;
+        mk_cmp = mk_bool;
+    } else {
+        eval_expr $a;
+        if err == "" { va = eval_expr; } else { err = ""; ok = false; }
+        if ok {
+            eval_expr $b;
+            if err == "" { vb = eval_expr; } else { err = ""; ok = false; }
+        }
+        if ok {
+            local res = 0;
+            if $op == 0 { if va < vb { res = 1; } }
+            elif $op == 1 { if va > vb { res = 1; } }
+            else { if va == vb { res = 1; } }
+            mk_bool res;
+            mk_cmp = mk_bool;
+        } else {
+            pr_expr $a;
+            local atl = pr_out;
+            pr_expr $b;
+            local btl = pr_out;
+            local opt = " < ";
+            if $op == 1 { opt = " > "; } elif $op == 2 { opt = " == "; }
+            local txt = atl & opt & btl;
+            local id = new_node(K.Var, 0, 0, 0, 1, txt);
+            if id != 0 {
+                nd_sig[id] = "V" & txt;
+                nd_deg[id] = 0;
+            }
+            mk_cmp = id;
+        }
+    }
+}
+
 proc mk_inf sign {
     mk_inf = new_node(K.Inf, 0, 0, $sign, 1, "");
     if mk_inf != 0 {
@@ -579,18 +629,22 @@ proc mk_func kind, ch {
         mk_func = sqrt_factor;
     } elif $kind == K.Sqrt and is_bigfrac($ch) {
         bigfrac_text $ch;
-        if bigfrac_text != "" {
-            local fid = new_node(K.Var, 0, 0, 0, 1, bigfrac_text);
-            if fid != 0 {
-                nd_sig[fid] = "V" & bigfrac_text;
-                nd_deg[fid] = 0;
-            }
-            new_func_raw K.Sqrt, fid;
-            mk_func = new_func_raw;
+        local sl = find_char(bigfrac_text, "/");
+        local stxt = "";
+        if sl > 0 {
+            local nn = substr(bigfrac_text, 1, sl - 1);
+            local dd = substr(bigfrac_text, sl + 1, length(bigfrac_text));
+            bi_mul_str nn, dd;
+            stxt = "sqrt(" & bi_mul_str & ")/" & dd;
         } else {
-            new_func_raw K.Sqrt, $ch;
-            mk_func = new_func_raw;
+            stxt = "sqrt(" & bigfrac_text & ")";
         }
+        local sid = new_node(K.Var, 0, 0, 0, 1, stxt);
+        if sid != 0 {
+            nd_sig[sid] = "V" & stxt;
+            nd_deg[sid] = 0;
+        }
+        mk_func = sid;
     } elif $kind == K.Sqrt and nd_kind[$ch] == K.Mul {
         sqrt_product $ch;
         mk_func = sqrt_product;
