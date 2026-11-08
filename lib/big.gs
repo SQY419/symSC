@@ -254,6 +254,50 @@ proc bi_mod_str a, b {
     bi_mod_str = bi_div_r;
 }
 
+
+# Exact positive integer q-th root, returned as a decimal string.
+# Returns "" when the number is not a perfect q-th power.
+proc bi_root_str n, q {
+    local nn = bi_norm($n);
+    if nn == "0" { bi_root_str = "0"; } elif nn[1] == "-" { bi_root_str = ""; }
+    elif $q <= 1 { bi_root_str = nn; }
+    else {
+        local digits = length(nn);
+        local e = floor((digits + $q - 1) / $q);
+        local hi = "1";
+        local i = 0;
+        until i >= e { hi &= "0"; i++; }
+        local lo = "0";
+        local found = false;
+        local steps = 0;
+        until steps > e * 4 + 16 or found {
+            bi_add_str lo, hi;
+            local sum = bi_add_str;
+            bi_div_str sum, "2";
+            local mid = bi_div_str;
+            if mid == lo or mid == hi {
+                steps = e * 4 + 17;
+            } else {
+                bi_pow_str mid, $q;
+                local pw = bi_pow_str;
+                bi_cmp_abs_str pw, nn;
+                local cmp = bi_cmp_abs_str;
+                if cmp == 0 {
+                    bi_root_str = mid;
+                    found = true;
+                } elif cmp < 0 {
+                    bi_add_str mid, "1";
+                    lo = bi_add_str;
+                } else {
+                    bi_sub_str mid, "1";
+                    hi = bi_sub_str;
+                }
+                steps++;
+            }
+        }
+        if found == false { bi_root_str = ""; }
+    }
+}
 proc bi_pow_str a, e {
     local n = 0;
     local i = 1;

@@ -577,6 +577,9 @@ proc mk_func kind, ch {
     } elif $kind == K.Sqrt and (nd_kind[$ch] == K.Pow or nd_kind[$ch] == K.PowE) {
         sqrt_factor $ch;
         mk_func = sqrt_factor;
+    } elif $kind == K.Sqrt and nd_kind[$ch] == K.BigRat {
+        mk_big ("sqrt(" & nd_txt[$ch] & ")");
+        mk_func = mk_big;
     } elif $kind == K.Sqrt and nd_kind[$ch] == K.Mul {
         sqrt_product $ch;
         mk_func = sqrt_product;
@@ -837,6 +840,24 @@ proc mk_pow_expr base, e {
         local ne = mk_mul;
         mk_pow_expr nd_a[$base], ne;
         mk_pow_expr = mk_pow_expr;
+    } elif nd_kind[$base] == K.Big and nd_kind[$e] == K.Num and nd_den[$e] > 1 {
+        local q = nd_den[$e];
+        local p = nd_num[$e];
+        bi_root_str nd_txt[$base], q;
+        local rt = bi_root_str;
+        if rt != "" {
+            mk_big rt;
+            local rb = mk_big;
+            mk_pow rb, p;
+            mk_pow_expr = mk_pow;
+        } else {
+            local id = new_node(K.PowE, $base, $e, 0, 1, "");
+            if id != 0 {
+                nd_sig[id] = "Q(" & nd_sig[$base] & "," & nd_sig[$e] & ")";
+                nd_deg[id] = 0;
+            }
+            mk_pow_expr = id;
+        }
     } elif nd_kind[$base] == K.Num and nd_den[$base] == 1 and nd_num[$base] > 1 and nd_kind[$e] == K.Num and nd_den[$e] > 1 {
         local q = nd_den[$e];
         local p = nd_num[$e];
