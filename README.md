@@ -20,6 +20,15 @@ diff(x^x, x)
 sqrt(8/9)
 > 2/3*sqrt(2)
 
+8^(1/3)
+> 2
+
+12^(1/2)
+> 2*sqrt(3)
+
+sqrt(x)-x^(1/2)
+> 0
+
 limit(sqrt(1+x^2)/x, x, oo)
 > 1
 
@@ -142,7 +151,7 @@ approx([sqrt(2),pi])           -> [1.4142135624, 3.1415926536]
 
 `c` 清屏，`h` 显示帮助。终端文本可拖动滚动，最多保留 5000 行。
 
-`help(function)` 查看单个函数的详细说明，例如 `help(simplify)`、`help(series)`；`help()` 查看总览。
+例如 `help(simplify)` 会分别显示函数签名和说明；`x^(1/2)` 统一显示为 `sqrt(x)`。`help(function)` 查看单个函数的详细说明，例如 `help(simplify)`、`help(series)`；`help()` 查看总览。
 
 **鲁棒性**
 

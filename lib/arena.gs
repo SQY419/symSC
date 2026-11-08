@@ -732,6 +732,41 @@ func float_pow_value(base, e) {
     return acc;
 }
 
+var nq_out = 1;
+var nq_in = 1;
+
+proc extract_qth n, q {
+    nq_out = 1;
+    nq_in = 1;
+    local x = $n;
+    local p = 2;
+    until p * p > x or p > 100000 {
+        local c = 0;
+        until x % p != 0 {
+            x = x / p;
+            c++;
+        }
+        if c > 0 {
+            local a = floor(c / $q);
+            local b = c - a * $q;
+            local k = 0;
+            until k >= a { nq_out = nq_out * p; k++; }
+            k = 0;
+            until k >= b { nq_in = nq_in * p; k++; }
+        }
+        p++;
+    }
+    if x > 1 {
+        # A leftover prime has exponent 1; it stays inside unless q == 1.
+        local a = floor(1 / $q);
+        local b = 1 - a * $q;
+        local k = 0;
+        until k >= a { nq_out = nq_out * x; k++; }
+        k = 0;
+        until k >= b { nq_in = nq_in * x; k++; }
+    }
+}
+
 proc mk_pow_expr base, e {
     if nd_kind[$base] == K.UN or nd_kind[$e] == K.UN {
         mk_undef;
@@ -777,6 +812,9 @@ proc mk_pow_expr base, e {
         } else {
             mk_undef; mk_pow_expr = mk_undef;
         }
+    } elif nd_kind[$e] == K.Num and nd_num[$e] == 1 and nd_den[$e] == 2 {
+        mk_func K.Sqrt, $base;
+        mk_pow_expr = mk_func;
     } elif $base == 0 or $e == 0 or err != "" {
         mk_pow_expr = 0;
     } elif is_one($base) {
@@ -799,6 +837,40 @@ proc mk_pow_expr base, e {
         local ne = mk_mul;
         mk_pow_expr nd_a[$base], ne;
         mk_pow_expr = mk_pow_expr;
+    } elif nd_kind[$base] == K.Num and nd_den[$base] == 1 and nd_num[$base] > 1 and nd_kind[$e] == K.Num and nd_den[$e] > 1 {
+        local q = nd_den[$e];
+        local p = nd_num[$e];
+        extract_qth nd_num[$base], q;
+        local out = nq_out;
+        local inside = nq_in;
+        local res = 1;
+        if out != 1 {
+            mk_num out, 1;
+            local ob = mk_num;
+            mk_pow ob, p;
+            res = mk_pow;
+        }
+        if inside != 1 {
+            mk_num inside, 1;
+            local ib = mk_num;
+            mk_num p, q;
+            local ie = mk_num;
+            if inside == nd_num[$base] and out == 1 {
+                local id = new_node(K.PowE, ib, ie, 0, 1, "");
+                if id != 0 {
+                    nd_sig[id] = "Q(" & nd_sig[ib] & "," & nd_sig[ie] & ")";
+                    nd_deg[id] = 0;
+                }
+                local inn = id;
+            } else {
+                mk_pow_expr ib, ie;
+                local inn = mk_pow_expr;
+            }
+            if res == 1 { res = inn; }
+            else { mk_mul res, inn; res = mk_mul; }
+        }
+        if res == 1 { mk_num 1, 1; res = mk_num; }
+        mk_pow_expr = res;
     } elif nd_kind[$base] == K.Num and nd_den[$base] == 1 and nd_num[$base] > 1 {
         # Pull a square base out, so 4^e becomes 2^(2e).  This is a
         # structural rewrite, not a special case for 4.
