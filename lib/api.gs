@@ -497,11 +497,18 @@ proc do_series_args {
                             cas_result = "错误：series 阶数应为 0..16 的整数";
                         } else {
                             local ord = nd_num[parse_root];
-                            series_build e, vname, pnt, ord;
-                            if err != "" or series_build == 0 {
+                            local sb = 0;
+                            if nd_kind[pnt] == K.Inf {
+                                series_inf e, vname, ord;
+                                sb = series_inf;
+                            } else {
+                                series_build e, vname, pnt, ord;
+                                sb = series_build;
+                            }
+                            if err != "" or sb == 0 {
                                 cas_result = "错误：" & err;
                             } else {
-                                rules_simplify series_build;
+                                rules_simplify sb;
                                 pr_expr rules_simplify;
                                 cas_result = pr_out;
                             }
@@ -537,7 +544,7 @@ proc do_limit_args {
                 cas_result = "错误：limit 的变量无效";
             } else {
                 local vname = nd_txt[parse_root];
-                if ptxt == "oo" or ptxt == "∞" or ptxt == "inf" or ptxt == "+oo" {
+                if ptxt == "oo" or ptxt == "∞" or ptxt == "inf" or ptxt == "infinity" or ptxt == "+oo" or ptxt == "+infinity" {
                     pr_expr e;
                     if pr_out == "(1/x + 1)^x" {
                         mk_var "e";

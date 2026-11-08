@@ -262,7 +262,7 @@ proc mk_var name {
     if nm == "undef" {
         mk_undef;
         mk_var = mk_undef;
-    } elif nm == "oo" or nm == "inf" {
+    } elif nm == "oo" or nm == "inf" or nm == "infinity" {
         mk_inf 1;
         mk_var = mk_inf;
     } elif nm == "pi" {

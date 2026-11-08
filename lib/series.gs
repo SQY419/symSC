@@ -86,6 +86,16 @@ proc series_build expr, vname, point, order {
     if err == "" { rules_simplify sum; series_build = rules_simplify; } else { series_build = 0; }
 }
 
+proc series_dispatch expr, vname, point, order {
+    if nd_kind[$point] == K.Inf {
+        series_inf $expr, $vname, $order;
+        series_dispatch = series_inf;
+    } else {
+        series_build $expr, $vname, $point, $order;
+        series_dispatch = series_build;
+    }
+}
+
 proc series_split_quotient root {
     delete lim_num_facs;
     delete lim_den_facs;
@@ -127,6 +137,197 @@ proc series_build_product faclist, fallback {
             i++;
         }
         series_build_product = out;
+    }
+}
+
+func series_has_exp(root) {
+    delete ser_scan;
+    local found = false;
+    local sp = 0;
+    sp++; add $root to ser_scan;
+    until sp == 0 {
+        local x = ser_scan[sp];
+        sp--;
+        if nd_kind[x] == K.Exp or (nd_kind[x] == K.PowE and nd_kind[nd_a[x]] == K.E) {
+            found = true;
+            sp = 0;
+        } elif nd_kind[x] == K.Add or nd_kind[x] == K.Mul or nd_kind[x] == K.PowE {
+            sp++;
+            if sp > length(ser_scan) { add nd_b[x] to ser_scan; } else { ser_scan[sp] = nd_b[x]; }
+            sp++;
+            if sp > length(ser_scan) { add nd_a[x] to ser_scan; } else { ser_scan[sp] = nd_a[x]; }
+        } elif nd_kind[x] == K.Pow or (nd_kind[x] >= K.Sin and nd_kind[x] <= K.Atan) or nd_kind[x] == K.Unknown {
+            sp++;
+            if sp > length(ser_scan) { add nd_a[x] to ser_scan; } else { ser_scan[sp] = nd_a[x]; }
+        }
+    }
+    return found;
+}
+
+list ser_scan;
+
+list se_val;
+list se_stk_node;
+list se_stk_state;
+var se_sp = 0;
+var se_coef = 0;
+var se_ok = false;
+
+func se_linear(ex, vname) {
+    se_ok = false;
+    se_coef = 0;
+    if nd_kind[$ex] == K.Var and nd_txt[$ex] == $vname {
+        se_ok = true;
+        se_coef = 1;
+    } elif nd_kind[$ex] == K.Mul {
+        local a = nd_a[$ex];
+        local b = nd_b[$ex];
+        if nd_kind[a] == K.Num and nd_kind[b] == K.Var and nd_txt[b] == $vname {
+            se_ok = true;
+            se_coef = nd_num[a] / nd_den[a];
+        } elif nd_kind[b] == K.Num and nd_kind[a] == K.Var and nd_txt[a] == $vname {
+            se_ok = true;
+            se_coef = nd_num[b] / nd_den[b];
+        }
+    }
+}
+
+proc se_rebuild n, tv, vname {
+    local k = nd_kind[$n];
+    if k == K.Add {
+        mk_add se_val[nd_a[$n]], se_val[nd_b[$n]];
+        se_rebuild = mk_add;
+    } elif k == K.Mul {
+        mk_mul se_val[nd_a[$n]], se_val[nd_b[$n]];
+        se_rebuild = mk_mul;
+    } elif k == K.Pow {
+        mk_pow se_val[nd_a[$n]], nd_num[$n];
+        se_rebuild = mk_pow;
+    } elif k == K.PowE {
+        local e = nd_b[$n];
+        local lc = se_linear(e, $vname);
+        if nd_kind[nd_a[$n]] == K.E and se_ok {
+            mk_pow $tv, 0 - se_coef;
+            se_rebuild = mk_pow;
+        } else {
+            mk_pow_expr se_val[nd_a[$n]], se_val[e];
+            se_rebuild = mk_pow_expr;
+        }
+    } elif k == K.Exp {
+        local lc2 = se_linear(nd_a[$n], $vname);
+        if se_ok {
+            mk_pow $tv, 0 - se_coef;
+            se_rebuild = mk_pow;
+        } else {
+            mk_func K.Exp, se_val[nd_a[$n]];
+            se_rebuild = mk_func;
+        }
+    } elif k >= K.Sin and k <= K.Atan {
+        mk_func k, se_val[nd_a[$n]];
+        se_rebuild = mk_func;
+    } elif k == K.Unknown {
+        mk_genfunc nd_txt[$n], se_val[nd_a[$n]];
+        se_rebuild = mk_genfunc;
+    } else {
+        se_rebuild = $n;
+    }
+}
+
+proc series_exp_rewrite root, tv, vname {
+    series_exp_rewrite = $root;
+    if $root == 0 or err != "" { series_exp_rewrite = 0; } else {
+        delete se_val;
+        local i = 1;
+        until i > node_count { add 0 to se_val; i++; }
+        delete se_stk_node;
+        delete se_stk_state;
+        se_sp = 0;
+        se_sp++; add $root to se_stk_node; add 0 to se_stk_state;
+        until se_sp == 0 or err != "" {
+            local n = se_stk_node[se_sp];
+            local st = se_stk_state[se_sp];
+            se_sp--;
+            if st == 0 {
+                se_sp++;
+                if se_sp > length(se_stk_node) { add n to se_stk_node; add 1 to se_stk_state; }
+                else { se_stk_node[se_sp] = n; se_stk_state[se_sp] = 1; }
+                local k = nd_kind[n];
+                if k == K.Add or k == K.Mul or k == K.PowE {
+                    se_sp++;
+                    if se_sp > length(se_stk_node) { add nd_b[n] to se_stk_node; add 0 to se_stk_state; }
+                    else { se_stk_node[se_sp] = nd_b[n]; se_stk_state[se_sp] = 0; }
+                    se_sp++;
+                    if se_sp > length(se_stk_node) { add nd_a[n] to se_stk_node; add 0 to se_stk_state; }
+                    else { se_stk_node[se_sp] = nd_a[n]; se_stk_state[se_sp] = 0; }
+                } elif k == K.Pow or k == K.Exp or (k >= K.Sin and k <= K.Atan) or k == K.Unknown {
+                    se_sp++;
+                    if se_sp > length(se_stk_node) { add nd_a[n] to se_stk_node; add 0 to se_stk_state; }
+                    else { se_stk_node[se_sp] = nd_a[n]; se_stk_state[se_sp] = 0; }
+                }
+            } else {
+                se_rebuild n, $tv, $vname;
+                if err == "" { se_val[n] = se_rebuild; }
+            }
+        }
+        if err != "" { series_exp_rewrite = 0; } else { series_exp_rewrite = se_val[$root]; }
+    }
+}
+
+proc series_inf expr, vname, order {
+    series_inf = 0;
+    local use_exp = series_has_exp($expr);
+    mk_var "__tser";
+    local tv = mk_var;
+    mk_num 0, 1;
+    local z = mk_num;
+    if use_exp {
+        series_exp_rewrite $expr, tv, $vname;
+        if err != "" or series_exp_rewrite == 0 { series_inf = 0; } else {
+            rules_simplify series_exp_rewrite;
+            if err != "" { series_inf = 0; } else {
+                series_build rules_simplify, "__tser", z, $order;
+                if err != "" or series_build == 0 { series_inf = 0; } else {
+                    mk_var $vname;
+                    local xv = mk_var;
+                    mk_neg xv;
+                    local nx = mk_neg;
+                    mk_var "e";
+                    local ev = mk_var;
+                    mk_pow_expr ev, nx;
+                    local tb = mk_pow_expr;
+                    subst_clear;
+                    subst_add "__tser", tb;
+                    subst_expr series_build;
+                    if err == "" {
+                        rules_simplify subst_expr;
+                        if err == "" { series_inf = rules_simplify; }
+                    }
+                }
+            }
+        }
+    } else {
+        mk_pow tv, -1;
+        subst_clear;
+        subst_add $vname, mk_pow;
+        subst_expr $expr;
+        if err != "" { series_inf = 0; } else {
+            rules_simplify subst_expr;
+            if err != "" { series_inf = 0; } else {
+                series_build rules_simplify, "__tser", z, $order;
+                if err != "" or series_build == 0 { series_inf = 0; } else {
+                    mk_var $vname;
+                    mk_pow mk_var, -1;
+                    local tb = mk_pow;
+                    subst_clear;
+                    subst_add "__tser", tb;
+                    subst_expr series_build;
+                    if err == "" {
+                        rules_simplify subst_expr;
+                        if err == "" { series_inf = rules_simplify; }
+                    }
+                }
+            }
+        }
     }
 }
 

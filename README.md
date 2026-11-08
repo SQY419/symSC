@@ -23,6 +23,12 @@ sqrt(8/9)
 limit(sqrt(1+x^2)/x, x, oo)
 > 1
 
+series(1/(e^(-x)+1), x=oo, 5)
+> -e^(-x) - e^(-3*x) - e^(-5*x) + e^(-2*x) + e^(-4*x) + 1
+
+limit(1/x, x, infinity)
+> 0
+
 approx(2^(2^100))
 > 1e381600854690000000000000000000
 ```
@@ -48,7 +54,7 @@ simplify(expr)          expand(expr)
 diff(expr[, var])       subst(expr, var=expr)
 eval(expr, var=value)   approx(expr)
 gcd(a, b)               lcm(a, b)
-series(expr, x=a, n)    limit(expr, x, a)
+series(expr, x=a, n)    limit(expr, x, a)    # x=oo / infinity 支持渐进展开
 ```
 
 变量定义：
