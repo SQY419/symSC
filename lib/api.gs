@@ -85,8 +85,39 @@ proc split_args inner {
     }
 }
 
+list help_names = ["simplify", "expand", "diff", "subst", "eval", "approx", "gcd", "lcm", "series", "limit", "texpand", "tlinear", "tcollect", "sin2cos", "cos2sin", "halftan", "trigsin", "trigcos", "trigtan", "collect", "makelist", "length", "unitv", "cross", "dot", "transpose", "det", "help"];
+list help_usage = ["simplify(expr)", "expand(expr)", "diff(expr[, var])", "subst(expr, var=value)", "eval(expr, var=value, ...)", "approx(expr)", "gcd(a, b)", "lcm(a, b)", "series(expr, x=a, n)", "limit(expr, x, a)", "texpand(expr)", "tlinear(expr)", "tcollect(expr)", "sin2cos(expr)", "cos2sin(expr)", "halftan(expr)", "trigsin(expr)", "trigcos(expr)", "trigtan(expr)", "collect(expr, var)", "makelist(expr, var, begin, end)", "length(container)", "unitV(vector)", "cross(a, b)", "dot(a, b)", "transpose(matrix)", "det(matrix)", "help([function])"];
+list help_desc = ["Simplify: combine terms, cancel fractions, simplify trig/radicals.", "Expand brackets and polynomial products.", "Differentiate with respect to an optional variable.", "Substitute a variable with an expression.", "Evaluate after assigning variables.", "Numerical approximation; big values use BigFloat.", "Polynomial greatest common divisor.", "Polynomial least common multiple.", "Taylor/asymptotic expansion at a point.", "Limit at a finite point or infinity.", "Expand trigonometric functions.", "Linearize trigonometric products.", "Collect trigonometric terms.", "Rewrite sin in terms of cos.", "Rewrite cos in terms of sin.", "Half-angle tangent substitution.", "Rewrite trigonometric functions via sin.", "Rewrite trigonometric functions via cos.", "Rewrite trigonometric functions via tan.", "Collect like terms by a variable.", "Build a list from begin to end.", "Number of elements in a container.", "Normalize a vector to unit length.", "Cross product of two 3D vectors.", "Dot product of two vectors.", "Transpose a matrix.", "Determinant of a square matrix (1x1/2x2/3x3).", "Show help; help(function) shows one entry."];
+
+proc show_help_target target {
+    local t = norm_ident($target);
+    if t == "化简" { t = "simplify"; } elif t == "展开" { t = "expand"; } elif t == "求导" { t = "diff"; } elif t == "代入" { t = "subst"; } elif t == "求值" { t = "eval"; } elif t == "最大公因式" { t = "gcd"; } elif t == "最小公倍式" { t = "lcm"; } elif t == "unitV" { t = "unitv"; }
+    local i = 1;
+    until i > length(help_names) {
+        if help_names[i] == t {
+            cas_result = help_usage[i] & "\n" & help_desc[i];
+            cas_help = true;
+            i = length(help_names) + 1;
+        } else { i++; }
+    }
+    if cas_help == false {
+        cas_result = "No help entry for: " & $target & "\nType help() to list functions.";
+        cas_help = true;
+    }
+}
+
 proc show_help {
-    cas_result = "函数：simplify | expand | diff | subst | eval | approx | gcd | lcm | series | limit | texpand | tlinear | tcollect | sin2cos | cos2sin | halftan | trigsin | trigcos | trigtan | collect；help 不能嵌套";
+    cas_help = true;
+    if arg_count >= 1 and trim(args[1]) != "" {
+        show_help_target trim(args[1]);
+    } else {
+        local out = "Scratch CAS help:\n";
+        out &= "Commands: simplify, expand, diff, subst, eval, approx, gcd, lcm, series, limit,\n";
+        out &= "          texpand, tlinear, tcollect, sin2cos, cos2sin, halftan, trigsin, trigcos, trigtan, collect\n";
+        out &= "Containers: makelist, length, unitV, cross, dot, transpose, det\n";
+        out &= "Usage: help(function) for details, e.g. help(simplify)";
+        cas_result = out;
+    }
 }
 
 proc do_simplify text {

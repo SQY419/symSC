@@ -82,7 +82,7 @@ func ascii_char(c) {
 proc term_add_raw text, style {
     add $text to term_lines;
     add $style to term_styles;
-    until length(term_lines) <= 200 {
+    until length(term_lines) <= 5000 {
         delete term_lines[1];
         delete term_styles[1];
     }
@@ -112,6 +112,19 @@ proc term_append text {
     term_append_styled $text, 0;
 }
 
+proc term_append_multiline text {
+    local start = 1;
+    local i = 1;
+    until i > length($text) + 1 {
+        if i > length($text) or $text[i] == "\n" {
+            local part = substr($text, start, i - 1);
+            if part != "" { term_append_styled part, 0; }
+            start = i + 1;
+        }
+        i++;
+    }
+}
+
 proc term_clear {
     delete term_lines;
     delete term_styles;
@@ -121,16 +134,12 @@ proc term_clear {
 }
 
 proc term_help {
-    term_append "Commands:";
-    term_append "simplify(expr)";
-    term_append "expand(expr)";
-    term_append "diff(expr[, var])";
-    term_append "subst(expr, var=expr)";
-    term_append "eval(expr, var=value)";
-    term_append "gcd(expr, expr) / lcm(expr, expr)";
-    term_append "series(expr, x=a, n)";
-    term_append "limit(expr, x, a)";
-    term_append "help";
+    cas_help = false;
+    delete args;
+    arg_count = 0;
+    show_help;
+    term_append_multiline cas_result;
+    cas_help = false;
 }
 
 proc term_error_raw msg {
@@ -171,6 +180,7 @@ onflag {
     }
     err = "";
     cas_result = "";
+    cas_help = false;
     hide;
     hide results;
     hide history;
@@ -193,6 +203,8 @@ on "compute" {
             term_error err;
         } elif starts_with(cas_result, "错误：") {
             term_error cas_result;
+        } elif cas_help {
+            term_append_multiline cas_result;
         } else {
             term_append_styled ("= " & cas_result), 2;
         }
