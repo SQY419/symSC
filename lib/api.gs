@@ -85,9 +85,9 @@ proc split_args inner {
     }
 }
 
-list help_names = ["simplify", "expand", "diff", "subst", "eval", "approx", "gcd", "lcm", "series", "limit", "texpand", "tlinear", "tcollect", "sin2cos", "cos2sin", "halftan", "trigsin", "trigcos", "trigtan", "collect", "makelist", "length", "unitv", "cross", "dot", "transpose", "det", "help"];
-list help_usage = ["simplify(expr)", "expand(expr)", "diff(expr[, var])", "subst(expr, var=value)", "eval(expr, var=value, ...)", "approx(expr)", "gcd(a, b)", "lcm(a, b)", "series(expr, x=a, n)", "limit(expr, x, a)", "texpand(expr)", "tlinear(expr)", "tcollect(expr)", "sin2cos(expr)", "cos2sin(expr)", "halftan(expr)", "trigsin(expr)", "trigcos(expr)", "trigtan(expr)", "collect(expr, var)", "makelist(expr, var, begin, end)", "length(container)", "unitV(vector)", "cross(a, b)", "dot(a, b)", "transpose(matrix)", "det(matrix)", "help([function])"];
-list help_desc = ["Simplify: combine terms, cancel fractions, simplify trig/radicals.", "Expand brackets and polynomial products.", "Differentiate with respect to an optional variable.", "Substitute a variable with an expression.", "Evaluate after assigning variables.", "Numerical approximation; big values use BigFloat.", "Polynomial greatest common divisor.", "Polynomial least common multiple.", "Taylor/asymptotic expansion at a point.", "Limit at a finite point or infinity.", "Expand trigonometric functions.", "Linearize trigonometric products.", "Collect trigonometric terms.", "Rewrite sin in terms of cos.", "Rewrite cos in terms of sin.", "Half-angle tangent substitution.", "Rewrite trigonometric functions via sin.", "Rewrite trigonometric functions via cos.", "Rewrite trigonometric functions via tan.", "Collect like terms by a variable.", "Build a list from begin to end.", "Number of elements in a container.", "Normalize a vector to unit length.", "Cross product of two 3D vectors.", "Dot product of two vectors.", "Transpose a matrix.", "Determinant of a square matrix (1x1/2x2/3x3).", "Show help; help(function) shows one entry."];
+list help_names = ["simplify", "expand", "diff", "subst", "eval", "approx", "gcd", "lcm", "series", "limit", "texpand", "tlinear", "tcollect", "sin2cos", "cos2sin", "halftan", "trigsin", "trigcos", "trigtan", "collect", "makelist", "length", "unitv", "cross", "dot", "transpose", "det", "purge", "help"];
+list help_usage = ["simplify(expr)", "expand(expr)", "diff(expr[, var])", "subst(expr, var=value)", "eval(expr, var=value, ...)", "approx(expr)", "gcd(a, b)", "lcm(a, b)", "series(expr, x=a, n)", "limit(expr, x, a)", "texpand(expr)", "tlinear(expr)", "tcollect(expr)", "sin2cos(expr)", "cos2sin(expr)", "halftan(expr)", "trigsin(expr)", "trigcos(expr)", "trigtan(expr)", "collect(expr, var)", "makelist(expr, var, begin, end)", "length(container)", "unitV(vector)", "cross(a, b)", "dot(a, b)", "transpose(matrix)", "det(matrix)", "purge(name)", "help([function])"];
+list help_desc = ["Simplify: combine terms, cancel fractions, simplify trig/radicals.", "Expand brackets and polynomial products.", "Differentiate with respect to an optional variable.", "Substitute a variable with an expression.", "Evaluate after assigning variables.", "Numerical approximation; big values use BigFloat.", "Polynomial greatest common divisor.", "Polynomial least common multiple.", "Taylor/asymptotic expansion at a point.", "Limit at a finite point or infinity.", "Expand trigonometric functions.", "Linearize trigonometric products.", "Collect trigonometric terms.", "Rewrite sin in terms of cos.", "Rewrite cos in terms of sin.", "Half-angle tangent substitution.", "Rewrite trigonometric functions via sin.", "Rewrite trigonometric functions via cos.", "Rewrite trigonometric functions via tan.", "Collect like terms by a variable.", "Build a list from begin to end.", "Number of elements in a container.", "Normalize a vector to unit length.", "Cross product of two 3D vectors.", "Dot product of two vectors.", "Transpose a matrix.", "Determinant of a square matrix (1x1/2x2/3x3).", "Remove a variable definition and return its value; missing names return empty.", "Show help; help(function) shows one entry."];
 
 proc show_help_target target {
     local t = norm_ident($target);
@@ -106,13 +106,33 @@ proc show_help_target target {
     }
 }
 
+proc do_purge_args {
+    cas_empty = false;
+    if arg_count != 1 {
+        set_err "purge 需要 1 个参数";
+    } else {
+        local nm = norm_ident(trim(args[1]));
+        if is_simple_ident(nm) == false {
+            set_err "purge 的变量无效";
+        } else {
+            def_purge nm;
+            if purged_found == false {
+                cas_result = "";
+                cas_empty = true;
+            } else {
+                cas_result = purged_value;
+            }
+        }
+    }
+}
+
 proc show_help {
     cas_help = true;
     if arg_count >= 1 and trim(args[1]) != "" {
         show_help_target trim(args[1]);
     } else {
         local out = "Scratch CAS help:\n";
-        out &= "Commands: simplify, expand, diff, subst, eval, approx, gcd, lcm, series, limit,\n";
+        out &= "Commands: simplify, expand, diff, subst, eval, approx, gcd, lcm, series, limit, purge,\n";
         out &= "          texpand, tlinear, tcollect, sin2cos, cos2sin, halftan, trigsin, trigcos, trigtan, collect\n";
         out &= "Containers: makelist, length, unitV, cross, dot, transpose, det\n";
         out &= "Usage: help(function) for details, e.g. help(simplify)";
@@ -710,6 +730,8 @@ proc dispatch_function cmd {
         do_trigtrans_args 9;
     } elif $cmd == "collect" {
         do_collect_args;
+    } elif $cmd == "purge" {
+        do_purge_args;
     } elif $cmd == "help" or $cmd == "帮助" {
         show_help;
     } else {
@@ -725,7 +747,7 @@ var fc_close = 0;
 var fc_name = 0;
 
 func is_cmd_name(name) {
-    return $name == "simplify" or $name == "expand" or $name == "diff" or $name == "subst" or $name == "eval" or $name == "gcd" or $name == "lcm" or $name == "series" or $name == "limit" or $name == "texpand" or $name == "tlinear" or $name == "tcollect" or $name == "sin2cos" or $name == "cos2sin" or $name == "halftan" or $name == "trigsin" or $name == "trigcos" or $name == "trigtan" or $name == "collect" or $name == "最大公因式" or $name == "最小公倍式" or $name == "help" or $name == "化简" or $name == "展开" or $name == "求导" or $name == "代入" or $name == "求值" or $name == "帮助";
+    return $name == "simplify" or $name == "expand" or $name == "diff" or $name == "subst" or $name == "eval" or $name == "gcd" or $name == "lcm" or $name == "series" or $name == "limit" or $name == "texpand" or $name == "tlinear" or $name == "tcollect" or $name == "sin2cos" or $name == "cos2sin" or $name == "halftan" or $name == "trigsin" or $name == "trigcos" or $name == "trigtan" or $name == "collect" or $name == "purge" or $name == "最大公因式" or $name == "最小公倍式" or $name == "help" or $name == "化简" or $name == "展开" or $name == "求导" or $name == "代入" or $name == "求值" or $name == "帮助";
 }
 
 func skip_spaces(s, i) {
@@ -1102,7 +1124,7 @@ proc expand_nested_text s {
 }
 
 func is_reserved_ident(n) {
-    return $n == "sin" or $n == "cos" or $n == "tan" or $n == "exp" or $n == "ln" or $n == "log" or $n == "sqrt" or $n == "abs" or $n == "asin" or $n == "acos" or $n == "atan" or $n == "sgn" or $n == "makelist" or $n == "cross" or $n == "dot" or $n == "transpose" or $n == "det" or $n == "length" or $n == "unitv" or $n == "approx" or $n == "pi" or $n == "e" or $n == "oo" or $n == "inf" or $n == "undef" or $n == "help";
+    return $n == "sin" or $n == "cos" or $n == "tan" or $n == "exp" or $n == "ln" or $n == "log" or $n == "sqrt" or $n == "abs" or $n == "asin" or $n == "acos" or $n == "atan" or $n == "sgn" or $n == "makelist" or $n == "cross" or $n == "dot" or $n == "transpose" or $n == "det" or $n == "length" or $n == "unitv" or $n == "approx" or $n == "purge" or $n == "pi" or $n == "e" or $n == "oo" or $n == "inf" or $n == "undef" or $n == "help";
 }
 
 func def_lookup(n) {
@@ -1124,6 +1146,26 @@ proc def_set n, t {
     } else {
         add $n to def_name;
         add $t to def_text;
+    }
+}
+
+var purged_value = "0";
+var purged_found = false;
+
+proc def_purge n {
+    purged_value = "0";
+    purged_found = false;
+    local i = 1;
+    until i > length(def_name) {
+        if def_name[i] == $n {
+            purged_value = def_text[i];
+            purged_found = true;
+            delete def_name[i];
+            delete def_text[i];
+            i = length(def_name) + 1;
+        } else {
+            i++;
+        }
     }
 }
 
@@ -1153,6 +1195,10 @@ func replace_ident(s, name, repl) {
 
 func apply_defs(s) {
     local out = $s;
+    local po = find_char(out, "(");
+    if po > 0 and norm_ident(trim(substr(out, 1, po - 1))) == "purge" {
+        return out;
+    }
     local i = 1;
     until i > length(def_name) {
         out = replace_ident(out, def_name[i], "(" & def_text[i] & ")");
@@ -1188,6 +1234,8 @@ func is_simple_ident(s) {
 nowarp proc run_command s {
     err = "";
     cas_result = "";
+    cas_help = false;
+    cas_empty = false;
     reset_nodes;
     poly_reset;
     bp_reset;

@@ -21,6 +21,7 @@ var MAX_OUTPUT = 8192;
 var err = 0;
 var cas_result = 0;
 var cas_help = false;
+var cas_empty = false;
 
 var node_count = 1;
 var lex_ok = true;

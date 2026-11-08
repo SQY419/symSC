@@ -23,7 +23,10 @@ const cases = [
   ['v=[1,2,3]', 'v = [1, 2, 3]'],
   ['v[2]', '2'],
   ['makelist(x+1,x,0,3)', '{1, 2, 3, 4}'],
-  ['makelist(x^2,x,1,3)[2]', '4']
+  ['makelist(x^2,x,1,3)[2]', '4'],
+  ['a=114514', 'a = 114514'],
+  ['purge(a)', '114514'],
+  ['purge(a)', '']
 ];
 vm.loadProject(fs.readFileSync(process.argv[2])).then(async () => {
   const rt = vm.runtime;
