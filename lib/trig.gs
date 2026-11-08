@@ -67,11 +67,124 @@ proc tg_sqrt3_third {
     tg_sqrt3_third = mk_mul;
 }
 
+proc tg_sqrt2_val {
+    mk_num 2, 1; mk_func K.Sqrt, mk_num; tg_sqrt2_val = mk_func;
+}
+proc tg_sqrt5_val {
+    mk_num 5, 1; mk_func K.Sqrt, mk_num; tg_sqrt5_val = mk_func;
+}
+proc tg_sqrt6_val {
+    mk_num 6, 1; mk_func K.Sqrt, mk_num; tg_sqrt6_val = mk_func;
+}
+proc tg_sin_pi8 {
+    tg_sqrt2_val; local s = tg_sqrt2_val;
+    mk_num 2, 1; local two = mk_num;
+    mk_neg s; mk_add two, mk_neg; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 2; mk_mul mk_num, root; tg_sin_pi8 = mk_mul;
+}
+proc tg_cos_pi8 {
+    tg_sqrt2_val; local s = tg_sqrt2_val;
+    mk_num 2, 1; local two = mk_num;
+    mk_add two, s; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 2; mk_mul mk_num, root; tg_cos_pi8 = mk_mul;
+}
+proc tg_sin_pi5 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 2, 1; mk_mul mk_num, s; local two_s = mk_mul;
+    mk_num 10, 1; local ten = mk_num;
+    mk_neg two_s; mk_add ten, mk_neg; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 4; mk_mul mk_num, root; tg_sin_pi5 = mk_mul;
+}
+proc tg_cos_pi5 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 1, 1; local one = mk_num;
+    mk_add one, s; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_cos_pi5 = mk_mul;
+}
+proc tg_sin_2pi5 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 2, 1; mk_mul mk_num, s; local two_s = mk_mul;
+    mk_num 10, 1; local ten = mk_num;
+    mk_add ten, two_s; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 4; mk_mul mk_num, root; tg_sin_2pi5 = mk_mul;
+}
+proc tg_cos_2pi5 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 1, 1; local one = mk_num;
+    mk_neg one; mk_add s, mk_neg; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_cos_2pi5 = mk_mul;
+}
+proc tg_sin_pi10 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 1, 1; local one = mk_num;
+    mk_neg one; mk_add s, mk_neg; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_sin_pi10 = mk_mul;
+}
+proc tg_cos_pi10 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 2, 1; mk_mul mk_num, s; local two_s = mk_mul;
+    mk_num 10, 1; local ten = mk_num;
+    mk_add ten, two_s; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 4; mk_mul mk_num, root; tg_cos_pi10 = mk_mul;
+}
+proc tg_sin_3pi10 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 1, 1; local one = mk_num;
+    mk_add one, s; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_sin_3pi10 = mk_mul;
+}
+proc tg_cos_3pi10 {
+    tg_sqrt5_val; local s = tg_sqrt5_val;
+    mk_num 2, 1; mk_mul mk_num, s; local two_s = mk_mul;
+    mk_num 10, 1; local ten = mk_num;
+    mk_neg two_s; mk_add ten, mk_neg; local inside = mk_add;
+    mk_func K.Sqrt, inside; local root = mk_func;
+    mk_num 1, 4; mk_mul mk_num, root; tg_cos_3pi10 = mk_mul;
+}
+proc tg_sin_pi12 {
+    tg_sqrt6_val; local s6 = tg_sqrt6_val;
+    tg_sqrt2_val; local s2 = tg_sqrt2_val;
+    mk_neg s2; mk_add s6, mk_neg; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_sin_pi12 = mk_mul;
+}
+proc tg_cos_pi12 {
+    tg_sqrt6_val; local s6 = tg_sqrt6_val;
+    tg_sqrt2_val; local s2 = tg_sqrt2_val;
+    mk_add s6, s2; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_cos_pi12 = mk_mul;
+}
+proc tg_sin_5pi12 {
+    tg_sqrt6_val; local s6 = tg_sqrt6_val;
+    tg_sqrt2_val; local s2 = tg_sqrt2_val;
+    mk_add s6, s2; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_sin_5pi12 = mk_mul;
+}
+proc tg_cos_5pi12 {
+    tg_sqrt6_val; local s6 = tg_sqrt6_val;
+    tg_sqrt2_val; local s2 = tg_sqrt2_val;
+    mk_neg s2; mk_add s6, mk_neg; local inside = mk_add;
+    mk_num 1, 4; mk_mul mk_num, inside; tg_cos_5pi12 = mk_mul;
+}
 proc tg_sin_idx i {
     if $i == 0 { tg_num 0, 1; tg_sin_idx = tg_num; }
     elif $i == 1 { tg_num 1, 2; tg_sin_idx = tg_num; }
     elif $i == 2 { tg_sqrt2_half; tg_sin_idx = tg_sqrt2_half; }
     elif $i == 3 { tg_sqrt3_half; tg_sin_idx = tg_sqrt3_half; }
+    elif $i == 4 { tg_num 1, 1; tg_sin_idx = tg_num; }
+    elif $i == 5 { tg_sin_pi8; tg_sin_idx = tg_sin_pi8; }
+    elif $i == 6 { tg_cos_pi8; tg_sin_idx = tg_cos_pi8; }
+    elif $i == 7 { tg_sin_pi5; tg_sin_idx = tg_sin_pi5; }
+    elif $i == 8 { tg_sin_2pi5; tg_sin_idx = tg_sin_2pi5; }
+    elif $i == 9 { tg_sin_pi10; tg_sin_idx = tg_sin_pi10; }
+    elif $i == 10 { tg_sin_3pi10; tg_sin_idx = tg_sin_3pi10; }
+    elif $i == 11 { tg_sin_pi12; tg_sin_idx = tg_sin_pi12; }
+    elif $i == 12 { tg_sin_5pi12; tg_sin_idx = tg_sin_5pi12; }
+    elif $i == 13 { tg_sin_5pi12; tg_sin_idx = tg_sin_5pi12; }
     else { tg_num 1, 1; tg_sin_idx = tg_num; }
 }
 
@@ -80,6 +193,16 @@ proc tg_cos_idx i {
     elif $i == 1 { tg_sqrt3_half; tg_cos_idx = tg_sqrt3_half; }
     elif $i == 2 { tg_sqrt2_half; tg_cos_idx = tg_sqrt2_half; }
     elif $i == 3 { tg_num 1, 2; tg_cos_idx = tg_num; }
+    elif $i == 4 { tg_num 0, 1; tg_cos_idx = tg_num; }
+    elif $i == 5 { tg_cos_pi8; tg_cos_idx = tg_cos_pi8; }
+    elif $i == 6 { tg_sin_pi8; tg_cos_idx = tg_sin_pi8; }
+    elif $i == 7 { tg_cos_pi5; tg_cos_idx = tg_cos_pi5; }
+    elif $i == 8 { tg_cos_2pi5; tg_cos_idx = tg_cos_2pi5; }
+    elif $i == 9 { tg_cos_pi10; tg_cos_idx = tg_cos_pi10; }
+    elif $i == 10 { tg_cos_3pi10; tg_cos_idx = tg_cos_3pi10; }
+    elif $i == 11 { tg_cos_pi12; tg_cos_idx = tg_cos_pi12; }
+    elif $i == 12 { tg_cos_5pi12; tg_cos_idx = tg_cos_5pi12; }
+    elif $i == 13 { tg_cos_5pi12; mk_neg tg_cos_5pi12; tg_cos_idx = mk_neg; }
     else { tg_num 0, 1; tg_cos_idx = tg_num; }
 }
 
@@ -88,7 +211,48 @@ proc tg_tan_idx i {
     elif $i == 1 { tg_sqrt3_third; tg_tan_idx = tg_sqrt3_third; }
     elif $i == 2 { tg_num 1, 1; tg_tan_idx = tg_num; }
     elif $i == 3 { tg_sqrt3; tg_tan_idx = tg_sqrt3; }
-    else { mk_undef; tg_tan_idx = mk_undef; }
+    elif $i == 4 { mk_undef; tg_tan_idx = mk_undef; }
+    elif $i == 5 {
+        tg_sqrt2_val; local s2 = tg_sqrt2_val;
+        mk_num 1, 1; mk_neg mk_num; mk_add s2, mk_neg; tg_tan_idx = mk_add;
+    } elif $i == 6 {
+        tg_sqrt2_val; local s2 = tg_sqrt2_val;
+        mk_num 1, 1; mk_add s2, mk_num; tg_tan_idx = mk_add;
+    } elif $i == 7 {
+        tg_sqrt5_val; local s5 = tg_sqrt5_val;
+        mk_num 2, 1; mk_mul mk_num, s5; local t = mk_mul;
+        mk_num 5, 1; local five = mk_num;
+        mk_neg t; mk_add five, mk_neg; local inside = mk_add;
+        mk_func K.Sqrt, inside; tg_tan_idx = mk_func;
+    } elif $i == 8 {
+        tg_sqrt5_val; local s5 = tg_sqrt5_val;
+        mk_num 2, 1; mk_mul mk_num, s5; local t = mk_mul;
+        mk_num 5, 1; mk_add mk_num, t; local inside = mk_add;
+        mk_func K.Sqrt, inside; tg_tan_idx = mk_func;
+    } elif $i == 9 {
+        tg_sqrt5_val; local s5 = tg_sqrt5_val;
+        mk_num 10, 1; mk_mul mk_num, s5; local t = mk_mul;
+        mk_num 25, 1; local twentyfive = mk_num;
+        mk_neg t; mk_add twentyfive, mk_neg; local inside = mk_add;
+        mk_func K.Sqrt, inside; local root = mk_func;
+        mk_num 1, 5; mk_mul mk_num, root; tg_tan_idx = mk_mul;
+    } elif $i == 10 {
+        tg_sqrt5_val; local s5 = tg_sqrt5_val;
+        mk_num 10, 1; mk_mul mk_num, s5; local t = mk_mul;
+        mk_num 25, 1; mk_add mk_num, t; local inside = mk_add;
+        mk_func K.Sqrt, inside; local root = mk_func;
+        mk_num 1, 5; mk_mul mk_num, root; tg_tan_idx = mk_mul;
+    } elif $i == 11 {
+        tg_sqrt3; local s3 = tg_sqrt3;
+        mk_num 2, 1; local two = mk_num;
+        mk_neg s3; mk_add two, mk_neg; tg_tan_idx = mk_add;
+    } elif $i == 12 {
+        tg_sqrt3; local s3 = tg_sqrt3;
+        mk_num 2, 1; mk_add mk_num, s3; tg_tan_idx = mk_add;
+    } elif $i == 13 {
+        tg_sqrt3; local s3 = tg_sqrt3;
+        mk_num 2, 1; mk_add mk_num, s3; local sum = mk_add; mk_neg sum; tg_tan_idx = mk_neg;
+    } else { mk_undef; tg_tan_idx = mk_undef; }
 }
 
 func tg_idx(n, d) {
@@ -97,6 +261,17 @@ func tg_idx(n, d) {
     if $n * 4 == $d { return 2; }
     if $n * 3 == $d { return 3; }
     if $n * 2 == $d { return 4; }
+    if $d == 8 and $n == 1 { return 5; }
+    if $d == 8 and $n == 3 { return 6; }
+    if $d == 5 and $n == 1 { return 7; }
+    if $d == 5 and $n == 2 { return 8; }
+    if $d == 10 and $n == 1 { return 9; }
+    if $d == 10 and $n == 3 { return 10; }
+    if $d == 10 and $n == 2 { return 7; }
+    if $d == 10 and $n == 4 { return 8; }
+    if $d == 12 and $n == 1 { return 11; }
+    if $d == 12 and $n == 5 { return 12; }
+    if $d == 12 and $n == 7 { return 13; }
     return -1;
 }
 
