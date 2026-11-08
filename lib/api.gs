@@ -160,6 +160,8 @@ proc do_simplify text {
             if err == "" and combine_powers != 0 { rules_simplify = combine_powers; }
             combine_fractions rules_simplify;
             if err == "" and combine_fractions != 0 { rules_simplify = combine_fractions; }
+            normalize_big_fraction rules_simplify;
+            if err == "" and normalize_big_fraction != 0 { rules_simplify = normalize_big_fraction; }
         }
         if err != "" {
             cas_result = "错误：" & err;

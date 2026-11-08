@@ -107,25 +107,6 @@ proc pow_node base, e {
     } elif abs($e) > MAX_EXP {
         set_err "指数过大";
         pow_node = 0;
-    } elif nd_kind[$base] == K.BigRat {
-        if $e >= 0 and $e <= MAX_EXP {
-            bq_parts $base;
-            bi_pow_str bq_n1, $e; local nn = bi_pow_str;
-            bi_pow_str bq_d1, $e; local dd = bi_pow_str;
-            bq_norm nn, dd;
-            bq_make;
-            mk_pow_raw = bq_make;
-        } elif $e < 0 and abs($e) <= MAX_EXP {
-            bq_parts $base;
-            bi_pow_str bq_n1, 0 - $e; local nn = bi_pow_str;
-            bi_pow_str bq_d1, 0 - $e; local dd = bi_pow_str;
-            bq_norm dd, nn;
-            bq_make;
-            mk_pow_raw = bq_make;
-        } else {
-            mk_pow_raw = 0;
-            set_err "指数过大";
-        }
     } elif nd_kind[$base] == K.Big {
         if $e >= 1 and $e <= MAX_EXP {
             bi_pow_str nd_txt[$base], $e;
@@ -134,12 +115,13 @@ proc pow_node base, e {
         } elif $e == 0 {
             mk_num 1, 1;
             mk_pow_raw = mk_num;
-        } elif $e == -1 {
-            mk_big ("1/" & nd_txt[$base]);
-            mk_pow_raw = mk_big;
         } else {
-            pow_node $base, $e;
-            mk_pow_raw = pow_node;
+            local id = new_node(K.Pow, $base, 0, $e, 1, "");
+            if id != 0 {
+                nd_sig[id] = "P(" & nd_sig[$base] & "," & int_str($e) & ")";
+                nd_deg[id] = 0;
+            }
+            pow_node = id;
         }
     } elif nd_kind[$base] == K.Num {
         if nd_num[$base] == 0 and $e < 0 {
@@ -374,91 +356,6 @@ proc build_product cn, cd {
     }
 }
 
-# Big-rational helpers.  K.BigRat stores "numerator/denominator" text.
-var bq_rn = "0";
-var bq_rd = "1";
-var bq_n1 = "0";
-var bq_d1 = "1";
-var bq_n2 = "0";
-var bq_d2 = "1";
-
-func bq_numeric(id) {
-    return $id != 0 and (nd_kind[$id] == K.Num or nd_kind[$id] == K.Big or nd_kind[$id] == K.BigRat);
-}
-
-proc bq_parts id {
-    bq_n1 = "0";
-    bq_d1 = "1";
-    if nd_kind[$id] == K.BigRat {
-        local t = nd_txt[$id];
-        local p = find_char(t, "/");
-        if p > 0 {
-            bq_n1 = substr(t, 1, p - 1);
-            bq_d1 = substr(t, p + 1, length(t));
-        }
-    } elif nd_kind[$id] == K.Num {
-        bq_n1 = "" & nd_num[$id];
-        bq_d1 = "" & nd_den[$id];
-    } elif is_big($id) {
-        bq_n1 = nd_txt[$id];
-        bq_d1 = "1";
-    }
-}
-
-proc bq_norm n, d {
-    local nn = bi_norm($n);
-    local dd = bi_norm($d);
-    if dd == "0" { set_err "除数为零"; } else {
-        if dd[1] == "-" { bi_neg_str nn; nn = bi_neg_str; dd = substr(dd, 2, length(dd)); }
-        bi_gcd_str nn, dd;
-        local g = bi_gcd_str;
-        if g != "1" and g != "0" {
-            bi_div_str nn, g; nn = bi_div_str;
-            bi_div_str dd, g; dd = bi_div_str;
-        }
-        if nn == "0" { dd = "1"; }
-        bq_rn = nn;
-        bq_rd = dd;
-    }
-}
-
-proc bq_add an, ad, bn, bd {
-    bi_mul_str $an, $bd; local x = bi_mul_str;
-    bi_mul_str $bn, $ad; local y = bi_mul_str;
-    bi_add_str x, y; local n = bi_add_str;
-    bi_mul_str $ad, $bd; local d = bi_mul_str;
-    bq_norm n, d;
-}
-
-proc bq_mul an, ad, bn, bd {
-    bi_mul_str $an, $bn; local n = bi_mul_str;
-    bi_mul_str $ad, $bd; local d = bi_mul_str;
-    bq_norm n, d;
-}
-
-proc bq_make {
-    if bq_rd == "1" {
-        mk_big bq_rn;
-        bq_make = mk_big;
-    } else {
-        local id = new_node(K.BigRat, 0, 0, 0, 1, bq_rn & "/" & bq_rd);
-        if id != 0 {
-            nd_sig[id] = "R" & bq_rn & "/" & bq_rd;
-            nd_deg[id] = 0;
-        }
-        bq_make = id;
-    }
-}
-
-proc bq_combine a, b, op {
-    bq_parts $a; local an = bq_n1; local ad = bq_d1;
-    bq_parts $b; local bn = bq_n1; local bd = bq_d1;
-    if $op == 1 { bq_mul an, ad, bn, bd; }
-    else { bq_add an, ad, bn, bd; }
-    bq_make;
-    bq_combine = bq_make;
-}
-
 proc mk_mul a, b {
     if is_container($a) or is_container($b) {
         if is_container($a) and is_container($b) {
@@ -473,14 +370,6 @@ proc mk_mul a, b {
         } else {
             set_err "容器乘法不支持";
             mk_mul = 0;
-        }
-    } elif nd_kind[$a] == K.BigRat or nd_kind[$b] == K.BigRat {
-        if bq_numeric($a) and bq_numeric($b) {
-            bq_combine $a, $b, 1;
-            mk_mul = bq_combine;
-        } else {
-            mk_mul = 0;
-            set_err "大分数乘法失败";
         }
     } elif (is_big($a) or is_big($b)) and (is_big($a) or (nd_kind[$a] == K.Num and nd_den[$a] == 1)) and (is_big($b) or (nd_kind[$b] == K.Num and nd_den[$b] == 1)) {
         local asv = "";
@@ -599,12 +488,6 @@ proc mk_neg x {
     if is_container($x) {
         cont_neg $x;
         mk_neg = cont_neg;
-    } elif nd_kind[$x] == K.BigRat {
-        bq_parts $x;
-        bi_neg_str bq_n1;
-        bq_norm bi_neg_str, bq_d1;
-        bq_make;
-        mk_neg = bq_make;
     } elif is_big($x) {
         bi_neg_str nd_txt[$x];
         mk_big bi_neg_str;
@@ -1415,15 +1298,7 @@ list comb_big;
 list comb_bn;
 
 proc mk_add a, b {
-    if nd_kind[$a] == K.BigRat or nd_kind[$b] == K.BigRat {
-        if bq_numeric($a) and bq_numeric($b) {
-            bq_combine $a, $b, 2;
-            mk_add = bq_combine;
-        } else {
-            mk_add = 0;
-            set_err "大分数加法失败";
-        }
-    } elif is_container($a) or is_container($b) {
+    if is_container($a) or is_container($b) {
         if is_container($a) and is_container($b) {
             cont_add $a, $b;
             mk_add = cont_add;

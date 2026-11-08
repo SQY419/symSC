@@ -223,7 +223,7 @@ proc rules_pass root {
                 } elif k == K.PowE {
                     mk_pow_expr rs_val[nd_a[n]], rs_val[nd_b[n]];
                     r = mk_pow_expr;
-                } elif k == K.Num or k == K.Var or k == K.Pi or k == K.E or k == K.Float or k == K.UN or k == K.Inf or k == K.Big or k == K.BigRat or k == K.Vec or k == K.List or k == K.BigFloat {
+                } elif k == K.Num or k == K.Var or k == K.Pi or k == K.E or k == K.Float or k == K.UN or k == K.Inf or k == K.Big or k == K.Vec or k == K.List or k == K.BigFloat {
                     r = n;
                 } elif k == K.Unknown {
                     mk_genfunc nd_txt[n], rs_val[nd_a[n]];

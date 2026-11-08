@@ -109,7 +109,23 @@ proc approx_rebuild n {
         approx_rebuild = mk_pow_expr;
     } elif k == K.Approx {
         local ch = ap_val[nd_a[$n]];
-        if is_container(ch) {
+        if nd_kind[ch] == K.Big and substr(nd_txt[ch], 1, 5) == "sqrt(" {
+            local st = substr(nd_txt[ch], 6, length(nd_txt[ch]) - 1);
+            local sl = find_char(st, "/");
+            local qv = 0;
+            if sl > 0 {
+                local nn = substr(st, 1, sl - 1);
+                local dd = substr(st, sl + 1, length(st));
+                if dd != "" and dd + 0 != 0 { qv = sqrt((nn + 0) / (dd + 0)); }
+            }
+            local qf = new_float(qv);
+            approx_rebuild = qf;
+        } elif nd_kind[ch] == K.Sqrt and is_bigfrac(nd_a[ch]) {
+            bigfrac_double nd_a[ch];
+            local fv = bigfrac_double;
+            if fv >= 0 { local qv = new_float(sqrt(fv)); approx_rebuild = qv; }
+            else { approx_rebuild = 0; set_err "sqrt 的定义域错误"; }
+        } elif is_container(ch) {
             ap_map_container ch;
             approx_rebuild = ap_map_container;
         } elif nd_kind[ch] == K.BigFloat {

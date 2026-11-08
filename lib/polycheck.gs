@@ -34,7 +34,7 @@ proc poly_expandable root {
         local n = pc_stk[sp];
         sp--;
         local k = nd_kind[n];
-        if k == K.Vec or k == K.List or k == K.BigFloat or k == K.Big or k == K.BigRat or (k == K.Pow and nd_kind[nd_a[n]] == K.Big and nd_num[n] < 0) {
+        if k == K.Vec or k == K.List or k == K.BigFloat or k == K.Big or (k == K.Pow and nd_kind[nd_a[n]] == K.Big and nd_num[n] < 0) {
             bad = true;
         } elif k == K.PowE or (k >= K.Sin and k <= K.Atan) or k == K.Sgn or k == K.Unknown {
             pc_has_var n;

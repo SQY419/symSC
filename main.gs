@@ -15,6 +15,7 @@ costumes "assets/cas-character.svg";
 %include lib/sign
 %include lib/exact
 %include lib/sum
+%include lib/bigfrac
 %include lib/rules
 %include lib/poly
 %include lib/bipoly

@@ -577,8 +577,9 @@ proc mk_func kind, ch {
     } elif $kind == K.Sqrt and (nd_kind[$ch] == K.Pow or nd_kind[$ch] == K.PowE) {
         sqrt_factor $ch;
         mk_func = sqrt_factor;
-    } elif $kind == K.Sqrt and nd_kind[$ch] == K.BigRat {
-        mk_big ("sqrt(" & nd_txt[$ch] & ")");
+    } elif $kind == K.Sqrt and is_bigfrac($ch) {
+        bigfrac_text $ch;
+        mk_big ("sqrt(" & bigfrac_text & ")");
         mk_func = mk_big;
     } elif $kind == K.Sqrt and nd_kind[$ch] == K.Mul {
         sqrt_product $ch;

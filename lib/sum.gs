@@ -46,13 +46,15 @@ proc br_node {
         mk_big br_n;
         br_node = mk_big;
     } else {
-        local txt = br_n & "/" & br_d;
-        local id = new_node(K.BigRat, 0, 0, 0, 1, txt);
-        if id != 0 {
-            nd_sig[id] = "R" & txt;
-            nd_deg[id] = 0;
-        }
-        br_node = id;
+        mk_big br_n;
+        local num = mk_big;
+        mk_big br_d;
+        local den = mk_big;
+        mk_pow den, -1;
+        local inv = mk_pow;
+        mk_mul num, inv;
+        
+        br_node = mk_mul;
     }
 }
 

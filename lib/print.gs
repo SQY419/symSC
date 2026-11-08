@@ -216,7 +216,7 @@ proc pr_handle id {
         pr_emit "e";
     } elif nd_kind[$id] == K.UN {
         pr_emit "undef";
-    } elif nd_kind[$id] == K.Big or nd_kind[$id] == K.BigRat {
+    } elif nd_kind[$id] == K.Big {
         pr_emit nd_txt[$id];
     } elif nd_kind[$id] == K.BigFloat {
         pr_emit nd_txt[$id];
