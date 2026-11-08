@@ -430,6 +430,26 @@ proc close_makelist {
                     fa_active = false;
                 }
             }
+        } elif fa_name == "sum" or fa_name == "prod" {
+            if length(fa_args) == 1 {
+                if fa_name == "sum" { cont_sum fa_args[1]; }
+                else { cont_prod fa_args[1]; }
+                if err == "" {
+                    os_count--;
+                    if fa_name == "sum" { push_out cont_sum; }
+                    else { push_out cont_prod; }
+                    fa_active = false;
+                }
+            } elif length(fa_args) == 4 {
+                sum_range fa_args[1], fa_args[2], fa_args[3], fa_args[4], fa_name == "prod";
+                if err == "" {
+                    os_count--;
+                    push_out sum_range;
+                    fa_active = false;
+                }
+            } else {
+                set_err "sum/prod 需要 1 或 4 个参数";
+            }
         } else {
             set_err "未知多参数函数";
         }
@@ -491,7 +511,7 @@ proc parse_tokens {
                 push_out bound;
                 p++;
                 prev = t;
-            } elif (name == "makelist" or name == "cross" or name == "dot") and tk_type[p + 1] == T.LP {
+            } elif (name == "makelist" or name == "cross" or name == "dot" or name == "sum" or name == "prod") and tk_type[p + 1] == T.LP {
                 fa_begin name;
                 p += 2;
                 prev = T.LP;

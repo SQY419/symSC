@@ -17,6 +17,7 @@ list finished;
 %include lib/rationalize
 %include lib/sign
 %include lib/exact
+%include lib/sum
 %include lib/rules
 %include lib/poly
 %include lib/bipoly
