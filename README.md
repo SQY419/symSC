@@ -1,6 +1,6 @@
 # **sym Scratch**
 
-用 GoboScript 编写的，可编译到原版 Scratch 3.0 的符号计算。
+用 [GoboScript](https://github.com/aspizu/goboscript) 编写的，可编译到原版 Scratch 3.0 的符号计算。
 无**第三方扩展**依赖，可在 Scratch / TurboWarp 中运行。
 
 支持有理数、任意精度整数、BigFloat 科学计数法、多项式、根式、三角、微~~积~~分、极限、向量/矩阵/嵌套列表和变量定义。
