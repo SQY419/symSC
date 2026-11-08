@@ -436,6 +436,17 @@ proc close_makelist {
                     fa_active = false;
                 }
             }
+        } elif fa_name == "cat" {
+            if length(fa_args) != 2 {
+                set_err "cat 需要 2 个参数";
+            } else {
+                cont_cat fa_args[1], fa_args[2];
+                if err == "" {
+                    os_count--;
+                    push_out cont_cat;
+                    fa_active = false;
+                }
+            }
         } elif fa_name == "sum" or fa_name == "prod" {
             if length(fa_args) == 1 {
                 if fa_name == "sum" { cont_sum fa_args[1]; }
@@ -517,7 +528,7 @@ proc parse_tokens {
                 push_out bound;
                 p++;
                 prev = t;
-            } elif (name == "makelist" or name == "cross" or name == "dot" or name == "sum" or name == "prod") and tk_type[p + 1] == T.LP {
+            } elif (name == "makelist" or name == "cross" or name == "dot" or name == "sum" or name == "prod" or name == "cat") and tk_type[p + 1] == T.LP {
                 fa_begin name;
                 p += 2;
                 prev = T.LP;
@@ -630,9 +641,17 @@ proc parse_tokens {
             p++;
             prev = t;
         } elif t == T.LBrace {
-            open_container K.List;
-            p++;
-            prev = t;
+            if tk_type[p + 1] == T.RBrace {
+                ctb_begin K.List;
+                ctb_end;
+                push_out ctb_out;
+                p += 2;
+                prev = T.RBrace;
+            } else {
+                open_container K.List;
+                p++;
+                prev = t;
+            }
         } elif t == T.RBracket {
             if cs_depth > 0 and cs_index[cs_depth] {
                 close_index;

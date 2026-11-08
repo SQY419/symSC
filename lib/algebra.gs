@@ -1186,6 +1186,29 @@ proc cont_det c {
     }
 }
 
+proc cont_cat a, b {
+    if not is_container($a) or not is_container($b) {
+        set_err "cat 需要两个容器";
+        cont_cat = 0;
+    } else {
+        local kd = K.List;
+        if nd_kind[$a] == K.Vec and nd_kind[$b] == K.Vec { kd = K.Vec; }
+        ctb_begin kd;
+        local j = 1;
+        until j > nd_den[$a] {
+            ctb_add ct_elems[nd_num[$a] + j - 1];
+            j++;
+        }
+        j = 1;
+        until j > nd_den[$b] {
+            ctb_add ct_elems[nd_num[$b] + j - 1];
+            j++;
+        }
+        ctb_end;
+        cont_cat = ctb_out;
+    }
+}
+
 proc cont_dot a, b {
     if nd_den[$a] != nd_den[$b] {
         set_err "向量长度不匹配";

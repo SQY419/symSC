@@ -419,3 +419,9 @@ f(sqrt(sum(1/x^2,x,1,20)*6))
 x<2
 x==x
 sqrt(2)<sqrt(3)
+{}
+cat({1,2},{3,4})
+cat({},{1})
+length({})
+sum({})
+prod({})

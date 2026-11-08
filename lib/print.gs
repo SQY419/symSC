@@ -216,6 +216,8 @@ proc pr_handle id {
         pr_emit "pi";
     } elif nd_kind[$id] == K.E {
         pr_emit "e";
+    } elif nd_kind[$id] == K.Nil {
+        pr_emit "nil";
     } elif nd_kind[$id] == K.Bool {
         pr_emit nd_txt[$id];
     } elif nd_kind[$id] == K.Cmp {

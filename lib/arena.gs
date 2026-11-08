@@ -120,6 +120,14 @@ proc mk_big text {
     }
 }
 
+proc mk_nil {
+    mk_nil = new_node(K.Nil, 0, 0, 0, 1, "");
+    if mk_nil != 0 {
+        nd_sig[mk_nil] = "NIL";
+        nd_deg[mk_nil] = 0;
+    }
+}
+
 proc mk_bool v {
     local btxt = "False";
     if $v != 0 { btxt = "True"; }
