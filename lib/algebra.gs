@@ -747,8 +747,13 @@ proc mk_pow_raw base, e {
         local btxt = nd_num[$base];
         local etxt = 0 - $e;
         bi_pow_str btxt, etxt;
-        mk_big ("1/" & bi_pow_str);
-        mk_pow_raw = mk_big;
+        local stxt = "1/" & bi_pow_str;
+        local sid = new_node(K.Var, 0, 0, 0, 1, stxt);
+        if sid != 0 {
+            nd_sig[sid] = "V" & stxt;
+            nd_deg[sid] = 0;
+        }
+        mk_pow_raw = sid;
     } elif nd_kind[$base] == K.PowE {
         local inn = nd_a[$base];
         mk_num $e, 1;

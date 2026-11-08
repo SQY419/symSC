@@ -215,6 +215,8 @@ proc rules_pass root {
                 } elif k == K.Mul {
                     mk_mul rs_val[nd_a[n]], rs_val[nd_b[n]];
                     r = mk_mul;
+                } elif (k == K.Unknown or k == K.Sqrt) and is_bigfrac(nd_a[n]) {
+                    r = n;
                 } elif k == K.Pow and nd_kind[nd_a[n]] == K.Big and nd_num[n] < 0 {
                     r = n;
                 } elif k == K.Pow {
