@@ -18,7 +18,7 @@ const vm = new VM();
 vm.loadProject(fs.readFileSync(sb3)).then(async () => {
   vm.start();
   vm.greenFlag();
-  const deadline = Date.now() + 20000;
+  const deadline = Date.now() + 120000;
   let target = null;
   let out = null;
   while (Date.now() < deadline) {

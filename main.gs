@@ -26,6 +26,7 @@ costumes "assets/cas-character.svg";
 %include lib/print
 %include lib/diff
 %include lib/expand
+%include lib/fracadd
 %include lib/eval
 %include lib/approx
 %include lib/series

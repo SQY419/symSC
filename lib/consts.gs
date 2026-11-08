@@ -27,6 +27,7 @@ var token_count = 0;
 var parse_ok = true;
 var parse_root = 0;
 var simp_exact = false;
+var frac_combined = false;
 
 list nd_kind;
 list nd_a;

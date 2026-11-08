@@ -104,19 +104,23 @@ proc do_simplify text {
             # equal-base pair; run the combiner once more.
             combine_powers rules_simplify;
             if err == "" and combine_powers != 0 { rules_simplify = combine_powers; }
+            combine_fractions rules_simplify;
+            if err == "" and combine_fractions != 0 { rules_simplify = combine_fractions; }
         }
         if err != "" {
             cas_result = "错误：" & err;
         } else {
-            ng_try_cancel_fraction rules_simplify;
-            if ng_try_cancel_fraction != 0 and err == "" {
-                rules_simplify ng_try_cancel_fraction;
+            if frac_combined == false {
+                ng_try_cancel_fraction rules_simplify;
+                if ng_try_cancel_fraction != 0 and err == "" {
+                    rules_simplify ng_try_cancel_fraction;
+                }
             }
             if err != "" {
                 cas_result = "错误：" & err;
             } else {
                 local cur = rules_simplify;
-                if simp_exact == false {
+                if simp_exact == false and frac_combined == false {
                 local rit = 0;
                 local rch = true;
                 until rit >= 6 or rch == false or err != "" {
