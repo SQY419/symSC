@@ -340,7 +340,7 @@ n 元做法：额外 `n-2` 个变量在网格点上求值，每个点调用二�
 - `tests/project/cases.txt` 是命令列表；`tests/build.sh` 生成 `data/cases.gs`（`list cases = [...]`），复制 `lib`，编译测试工程。
 - `tests/run_vm.js` 用 `scratch-vm` 加载 `.sb3`、点绿旗、轮询 `tests` 角色的 `finished` 列表，读取 `results`，与 `tests/expected.txt` 逐行比较。
 - `tests/ui_smoke.js` 监听 `QUESTION` 并发送 `ANSWER`，验证绿旗输入框、计算、角色 `say` 和 `history` 最新记录。
-- 当前 408 条用例覆盖解析、优先级、有理数、同类项、幂、Pythagorean、展开、求导、一般幂（`5^x`/`x^x`/`x^2.5`）、根式化简（`sqrt(8)`/`sqrt(8/9)`）、规则化简（`sqrt(x)^4`/`ln(exp(x))`）、代入、求值、定义域、裸表达式、嵌套命令和错误路径；同时覆盖函数式命令与旧版冒号语法。
+- 当前 409 条用例覆盖解析、优先级、有理数、同类项、幂、Pythagorean、展开、求导、一般幂（`5^x`/`x^x`/`x^2.5`）、根式化简（`sqrt(8)`/`sqrt(8/9)`）、规则化简（`sqrt(x)^4`/`ln(exp(x))`）、代入、求值、定义域、裸表达式、嵌套命令和错误路径；同时覆盖函数式命令与旧版冒号语法。
 
 ## 18. 后续优化
 

@@ -1,5 +1,61 @@
 # Numeric summation and product over a container or an integer range.
 
+var br_n = "0";
+var br_d = "1";
+var sum_numeric = true;
+var sum_seen_num = false;
+
+proc br_reduce n, d {
+    local nn = bi_norm($n);
+    local dd = bi_norm($d);
+    if dd == "0" {
+        set_err "除数为零";
+    } else {
+        if dd[1] == "-" {
+            bi_neg_str nn; nn = bi_neg_str;
+            dd = substr(dd, 2, length(dd));
+        }
+        bi_gcd_str nn, dd;
+        local g = bi_gcd_str;
+        if g != "1" and g != "0" {
+            bi_div_str nn, g; nn = bi_div_str;
+            bi_div_str dd, g; dd = bi_div_str;
+        }
+        if nn == "0" { dd = "1"; }
+        br_n = nn;
+        br_d = dd;
+    }
+}
+
+proc br_add_str an, ad, bn, bd {
+    bi_mul_str $an, $bd; local x = bi_mul_str;
+    bi_mul_str $bn, $ad; local y = bi_mul_str;
+    bi_add_str x, y; local n = bi_add_str;
+    bi_mul_str $ad, $bd; local d = bi_mul_str;
+    br_reduce n, d;
+}
+
+proc br_mul_str an, ad, bn, bd {
+    bi_mul_str $an, $bn; local n = bi_mul_str;
+    bi_mul_str $ad, $bd; local d = bi_mul_str;
+    br_reduce n, d;
+}
+
+proc br_node {
+    if br_d == "1" {
+        mk_big br_n;
+        br_node = mk_big;
+    } else {
+        local txt = br_n & "/" & br_d;
+        local id = new_node(K.BigRat, 0, 0, 0, 1, txt);
+        if id != 0 {
+            nd_sig[id] = "R" & txt;
+            nd_deg[id] = 0;
+        }
+        br_node = id;
+    }
+}
+
 list sum_stk;
 var sum_acc = 0;
 
@@ -94,6 +150,11 @@ proc sum_range expr, vnode, bnode, enode, is_prod {
             }
             local k = b;
             local guard = 0;
+            br_n = "0";
+            br_d = "1";
+            if $is_prod == 1 { br_n = "1"; }
+            sum_seen_num = false;
+            local mixed = false;
             until (step > 0 and k > e) or (step < 0 and k < e) or err != "" or guard > 10001 {
                 subst_clear;
                 mk_num k, 1;
@@ -109,20 +170,49 @@ proc sum_range expr, vnode, bnode, enode, is_prod {
                     if err == "" { val = exact_fold; }
                 }
                 if err == "" {
-                    if $is_prod == 1 {
-                        mk_mul acc, val;
-                        acc = mk_mul;
+                    if (nd_kind[val] == K.Num or is_big(val)) and mixed == false {
+                        local vnstr = "";
+                        local vdstr = "1";
+                        if nd_kind[val] == K.Num {
+                            vnstr = "" & nd_num[val];
+                            vdstr = "" & nd_den[val];
+                        } else {
+                            vnstr = nd_txt[val];
+                        }
+                        if $is_prod == 1 {
+                            br_mul_str br_n, br_d, vnstr, vdstr;
+                        } else {
+                            br_add_str br_n, br_d, vnstr, vdstr;
+                        }
+                        sum_seen_num = true;
                     } else {
-                        mk_add acc, val;
-                        acc = mk_add;
+                        if mixed == false {
+                            if sum_seen_num == true {
+                                br_node;
+                                acc = br_node;
+                            }
+                            mixed = true;
+                        }
+                        if $is_prod == 1 {
+                            mk_mul acc, val;
+                            acc = mk_mul;
+                        } else {
+                            mk_add acc, val;
+                            acc = mk_add;
+                        }
                     }
                 }
                 k += step;
                 guard++;
             }
             if err == "" {
-                rules_simplify acc;
-                if err == "" { sum_range = rules_simplify; }
+                if mixed == false and sum_seen_num == true {
+                    br_node;
+                    sum_range = br_node;
+                } else {
+                    rules_simplify acc;
+                    if err == "" { sum_range = rules_simplify; }
+                }
             }
         }
     }

@@ -7,7 +7,7 @@ enum T {
 enum K {
     Num, Var, Add, Mul, Pow,
     Sin, Cos, Tan, Exp, Ln, Log, Sqrt, Abs, Asin, Acos, Atan,
-    Pi, E, Float, PowE, UN, Inf, Unknown, Sgn, Big, Vec, List, Approx, BigFloat, Length, UnitV, Transpose, Det
+    Pi, E, Float, PowE, UN, Inf, Unknown, Sgn, Big, Vec, List, Approx, BigFloat, Length, UnitV, Transpose, Det, BigRat
 }
 
 var MAX_NODES = 32768;
