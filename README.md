@@ -268,3 +268,5 @@ GOBOSCRIPT=/path/to/goboscript ./tests/build.sh
 **快照**
 
 ![terminal](terminal-preview.png)
+
+预览图的生成方法见 [TERMINAL_PREVIEW.md](TERMINAL_PREVIEW.md)。
